@@ -16,6 +16,7 @@ import org.apache.http.message.BasicNameValuePair;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -23,6 +24,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -31,23 +34,23 @@ import android.widget.Toast;
 
 public class DrupoidActivity extends Activity {
 
-  // @todo add url and password through app, not here.
-  // Change this to your Drupoid URL.
-  private static final String DrupoidURL = "http://10.0.2.2/drupal7/drupoid";
-  // Change this to your Drupoid Password.
-  private static final String DrupoidPassword = "test";
-
-  // private static String selectedImagePath = "";
   private ImageView imgView;
   private Bitmap bitmap;
   private String image_title;
   private String selectedImagePath;
   private ProgressDialog dialog;
   private final int SELECT_PICTURE = 1;
+  private SharedPreferences mPref;
   InputStream inputStream;
 
+  /**
+   * Main onCreate.
+   */
   public void onCreate(Bundle savedInstanceState) {
 
+    mPref = this.getSharedPreferences("mPref", MODE_PRIVATE);
+
+    // Start main activity.
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
 
@@ -58,6 +61,26 @@ public class DrupoidActivity extends Activity {
     // Add listener on upload button.
     Button upload = (Button) findViewById(R.id.upload_button);
     upload.setOnClickListener(onUploadPress);
+  }
+
+  /**
+   * Create options menu.
+   */
+  public boolean onCreateOptionsMenu(Menu menu) {
+    menu.add(Menu.NONE, 0, 0, getString(R.string.settings)).setIcon(android.R.drawable.ic_menu_preferences);
+    return super.onCreateOptionsMenu(menu);
+  }
+
+  /**
+   * Menu.
+   */
+  public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+    case 0:
+      startActivity(new Intent(this, DrupoidSettings.class));
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -135,14 +158,21 @@ public class DrupoidActivity extends Activity {
       byte[] byte_arr = stream.toByteArray();
       String image_str = Base64.encodeBytes(byte_arr);
 
+      // Get settings.
+      String duser = mPref.getString("drupoid_username", "drupoid_username");
+      String dpass = mPref.getString("drupoid_password", "drupoid_password");
+      String durl = mPref.getString("drupoid_url", "drupoid_url");
+
       ArrayList<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+      nameValuePairs.add(new BasicNameValuePair("request_type", "image_upload"));
       nameValuePairs.add(new BasicNameValuePair("image", image_str));
       nameValuePairs.add(new BasicNameValuePair("title", image_title));
-      nameValuePairs.add(new BasicNameValuePair("password", DrupoidPassword));
+      nameValuePairs.add(new BasicNameValuePair("drupoid_password", dpass));
+      nameValuePairs.add(new BasicNameValuePair("drupoid_username", duser));
 
       try {
         HttpClient httpclient = new DefaultHttpClient();
-        HttpPost httppost = new HttpPost(DrupoidURL);
+        HttpPost httppost = new HttpPost(durl);
         httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
         HttpResponse response = httpclient.execute(httppost);
         sResponse = convertResponseToString(response);

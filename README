@@ -16,7 +16,7 @@ Drupal Installation
 -------------------
 Enable the module, give yourself the 'administer drupoid' permission
 and go to admin/config/media/drupoid where you need to configure
-some options like image field, author etc.
+some options like image field etc.
 
 Every request is logged into watchdog - good or bad.
 
@@ -24,9 +24,6 @@ Android
 -------
 
 The app is written against Android 2.3.3, SDK level 10.
-Before compiling, you need to change 2 paramaters in
-the following file: src/com/swentel/drupoid/DrupoidActivity.java.
-
-- DrupoidPassword
-- DrupoidUrl
-
+After compiling, run the application and configure
+the url, username and password. The path in the url
+matches the Drupal path, eg http://example.com/drupoid

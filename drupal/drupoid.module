@@ -46,11 +46,6 @@ function drupoid_permission() {
  */
 function drupoid_config($form, $form_state) {
 
-  $form['drupoid_password'] = array(
-    '#type' => 'password_confirm',
-    '#description' => t('This password is encrypted, so remember carefully what you enter. When left empty, a previously entered password will not be overwritten. You currently have !status.', array('!status' => (variable_get('drupoid_password') == '' ? t('<strong>no password</strong>') : t('<strong>a password</strong>')))),
-  );
-
   $options = array();
   $instances = field_info_instances('node');
   foreach ($instances as $bundle => $fields) {
@@ -69,16 +64,6 @@ function drupoid_config($form, $form_state) {
     '#default_value' => variable_get('drupoid_image_field'),
   );
 
-  $form['drupoid_name'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Authored by'),
-    '#maxlength' => 60,
-    '#autocomplete_path' => 'user/autocomplete',
-    '#default_value' => variable_get('drupoid_name'),
-    '#description' => t('Leave blank for %anonymous.', array('%anonymous' => variable_get('anonymous', t('Anonymous')))),
-  );
-
-
   $form['drupoid_status'] = array(
     '#title' => t('Publish immediately'),
     '#type' => 'checkbox',
@@ -91,40 +76,7 @@ function drupoid_config($form, $form_state) {
     '#default_value' => variable_get('drupoid_debug'),
   );
 
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save configuration'),
-  );
-
-  return $form;
-}
-
-/**
- * Submit callback: save the configuration form.
- */
-function drupoid_config_submit($form, $form_state) {
-
-  // Password.
-  if (!empty($form_state['values']['drupoid_password'])) {
-    require_once DRUPAL_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
-    $password = user_hash_password($form_state['values']['drupoid_password']);
-    variable_set('drupoid_password', $password);
-  }
-
-  // Debug.
-  variable_set('drupoid_debug', $form_state['values']['drupoid_debug']);
-
-  // Status.
-  variable_set('drupoid_status', $form_state['values']['drupoid_status']);
-
-  // Author.
-  variable_set('drupoid_name', $form_state['values']['drupoid_name']);
-
-  // Image field.
-  variable_set('drupoid_image_field', $form_state['values']['drupoid_image_field']);
-
-  // Set message.
-  drupal_set_message(t('The configuration options have been saved.'));
+  return system_settings_form($form);
 }
 
 /**
@@ -137,82 +89,68 @@ function drupoid_request() {
     watchdog('drupoid_debug', print_r($_POST, TRUE));
   }
 
-  // Check if the request is valid.
-  $valid_request = _drupoid_is_valid_request();
-  if (!$valid_request['valid']) {
-    $toast = $valid_request['toast'];
-    $severity = WATCHDOG_WARNING;
-  }
-  else {
-    $severity = WATCHDOG_NOTICE;
-
-    // Try to save the file.
-    $file = _drupoid_save_upload();
-
-    if ($file) {
-
-      // Build node.
-      list($bundle, $image_field_name) = explode('|', variable_get('drupoid_image_field'));
-      $node = new stdClass();
-      $node->title = $_POST['title'];
-      $node->type = $bundle;
-      $node->status = variable_get('drupoid_status', FALSE);
-      $node->name = variable_get('drupoid_name');
-      $node->language = LANGUAGE_NONE;
-      $node->{$image_field_name}[LANGUAGE_NONE][0] = (array) $file;
-
-      // Save the node.
-      node_submit($node);
-      node_save($node);
-      if ($node->nid) {
-        $toast = t('Image has been posted.');
-        cache_clear_all();
-      }
-      else {
-        $severity = WATCHDOG_WARNING;
-        $toast = t('Error saving new node.');
-      }
-    }
-    else {
-      $severity = WATCHDOG_WARNING;
-      $toast = t('Image file could not be saved.');
-    }
+  // Determine request type.
+  $request_type = _drupoid_get_request_type();
+  if (!$request_type) {
+    drupoid_end_request(t('Invalid request type.'), WATCHDOG_WARNING);
   }
 
+  // Always authenticate.
+  if (!drupoid_service_authenticate()) {
+    drupoid_end_request(t('Sorry, unrecognized username or password.'), WATCHDOG_NOTICE);
+  }
+
+  // If only authenticate, return here.
+  if ($request_type == 'authenticate') {
+    drupoid_end_request(t('Authentication succeeded for @user', array('@user' => $_POST['drupoid_username'])), WATCHDOG_NOTICE);
+  }
+
+  // Delegate to separate function.
+  $callback = 'drupoid_service_'  . $request_type;
+  $result = $callback();
+  drupoid_end_request($result['toast'], $result['severity']);
+}
+
+/**
+ * End the Drupoid request.
+ *
+ * @param $toast
+ *   A string to send back to the application and log to watchdog.
+ * @param $severity
+ *   A watchdog constant.
+ */
+function drupoid_end_request($toast, $severity) {
   watchdog('drupoid', $toast, array(), $severity);
   print $toast;
   exit();
 }
 
 /**
- * Helper function to upload an image.
+ * Drupoid authenticate service.
  */
-function _drupoid_save_upload() {
+function drupoid_service_authenticate() {
 
-  $image = $_POST['image'];
-  $binary = base64_decode($image);
-  $filename = 'public://android_' . time() . '.jpg';
-
-  return file_save_data($binary, $filename);
-}
-
-/**
- * Helper function to check if the request is valid.
- */
-function _drupoid_is_valid_request() {
-
-  // Password send through ?
-  if (!isset($_POST['password'])) {
+  // We need 2 variables at least.
+  if (!isset($_POST['drupoid_username']) && !isset($_POST['drupoid_password'])) {
     return array(
-      'valid' => FALSE,
-      'toast' => t('No password found in request.'),
+      'severity' => WATCHDOG_WARNING,
+      'toast' => t('No username or password supplied.'),
     );
   }
 
-  // Title send through ?
+  // Authenticate against user.
+  return user_authenticate($_POST['drupoid_username'], $_POST['drupoid_password']);
+}
+
+/**
+ * Drupoid image upload service.
+ */
+function drupoid_service_image_upload() {
+
+    // Title send through ?
   if (!isset($_POST['title'])) {
     return array(
-      'valid' => FALSE,
+      'severity' => WATCHDOG_NOTICE,
       'toast' => t('No title found in request.'),
     );
   }
@@ -220,43 +158,86 @@ function _drupoid_is_valid_request() {
   // Image send through ?
   if (!isset($_POST['image'])) {
     return array(
-      'valid' => FALSE,
+      'severity' => WATCHDOG_NOTICE,
       'toast' => t('No image found in request.'),
-    );
-  }
-
-  // Is the drupoid_password variable set.
-  if (!variable_get('drupoid_password')) {
-    return array(
-      'valid' => FALSE,
-      'toast' => t('No password set. Configure it on your Drupal installation.'),
     );
   }
 
   // Is the drupoid_image_field variable set.
   if (!variable_get('drupoid_image_field')) {
     return array(
-      'valid' => FALSE,
+      'severity' => WATCHDOG_NOTICE,
       'toast' => t('No image field set. Configure it on your Drupal installation.'),
     );
   }
 
-  // Compare drupoid_password and post password.
-  $stored_hash = variable_get('drupoid_password');
-  $password = $_POST['password'];
-  require_once DRUPAL_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
-  $hash = _password_crypt('sha512', $password, $stored_hash);
-  if ($hash && $stored_hash == $hash) {
-    return array(
-      'valid' => TRUE,
-      'toast' => t('Password match.'),
-    );
+  // Basic checks are ok. Let's move on.
+  $severity = WATCHDOG_NOTICE;
+
+  // Try to save the file.
+  $file = _drupoid_save_upload('image');
+
+  if ($file) {
+
+    // Build node.
+    list($bundle, $image_field_name) = explode('|', variable_get('drupoid_image_field'));
+    $node = new stdClass();
+    $node->title = $_POST['title'];
+    $node->type = $bundle;
+    $node->status = variable_get('drupoid_status', FALSE);
+    $node->name = $_POST['drupoid_username'];
+    $node->language = LANGUAGE_NONE;
+    $node->{$image_field_name}[LANGUAGE_NONE][0] = (array) $file;
+
+    // Save the node.
+    node_submit($node);
+    node_save($node);
+    if ($node->nid) {
+      $toast = t('Image has been posted.');
+      cache_clear_all();
+    }
+    else {
+      $severity = WATCHDOG_WARNING;
+      $toast = t('Error saving new node.');
+    }
   }
   else {
-    return array(
-      'valid' => FALSE,
-      'toast' => t('Passwords do not match.'),
-    );
+    $severity = WATCHDOG_WARNING;
+    $toast = t('Image file could not be saved.');
   }
+
+  return array(
+    'severity' => $severity,
+    'toast' => $toast,
+  );
 }
 
+/**
+ * Helper function to upload an image.
+ *
+ * @param $image_post_key
+ *   The key in the $_POST variable to look for
+ *   the image.
+ */
+function _drupoid_save_upload($image_post_key) {
+
+  $image = $_POST[$image_post_key];
+  $binary = base64_decode($image);
+  $filename = 'public://android_' . time() . '.jpg';
+
+  return file_save_data($binary, $filename);
+}
+
+/**
+ * Helper function to determine the request type.
+ */
+function _drupoid_get_request_type() {
+
+  $request_type = isset($_POST['request_type']) ? $_POST['request_type'] : FALSE;
+
+  if (in_array($request_type, array('authenticate', 'image_upload'))) {
+    return $request_type;
+  }
+
+  return FALSE;
+}
