@@ -60,9 +60,6 @@ public class DrupoidActivity extends Activity {
     String action = intent.getAction();
     if (Intent.ACTION_SEND.equals(action)) {
       if (extras.containsKey(Intent.EXTRA_STREAM)) {
-        // @todo check from where this image comes. It seems that we need
-        // to handle paths differently when coming from the file explorer for
-        // instance.
         Uri selectedImageUri = (Uri) extras.getParcelable(Intent.EXTRA_STREAM);
         DrupoidSetPreview(selectedImageUri);
       }
@@ -86,7 +83,7 @@ public class DrupoidActivity extends Activity {
   }
 
   /**
-   * Menu.
+   * Menu selection.
    */
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
@@ -115,9 +112,6 @@ public class DrupoidActivity extends Activity {
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     if (resultCode == RESULT_OK) {
       if (requestCode == SELECT_PICTURE) {
-        // @todo check from where this image comes. It seems that we need
-        // to handle paths differently when coming from the file explorer for
-        // instance.
         Uri selectedImageUri = data.getData();
         DrupoidSetPreview(selectedImageUri);
       }
@@ -142,23 +136,22 @@ public class DrupoidActivity extends Activity {
   };
 
   /**
-   * Get path of image.
-   */
-  public String getPath(Uri uri) {
-    String[] projection = {
-      MediaStore.Images.Media.DATA
-    };
-    Cursor cursor = managedQuery(uri, projection, null, null, null);
-    int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-    cursor.moveToFirst();
-    return cursor.getString(column_index);
-  }
-
-  /**
-   * Create preview
+   * Set preview in the imageView.
    */
   public void DrupoidSetPreview(Uri selectedImageUri) {
-    selectedImagePath = getPath(selectedImageUri);
+
+    // The selected image can either come from the Image gallery
+    // or from the File manager.
+    String fileManagerPath = selectedImageUri.getPath();
+    String imageGalleryPath = getPath(selectedImageUri);
+    if (imageGalleryPath != null) {
+      selectedImagePath = imageGalleryPath;
+    }
+    else if (fileManagerPath != null) {
+      selectedImagePath = fileManagerPath;
+    }
+
+    // Create preview.
     bitmap = BitmapFactory.decodeFile(selectedImagePath);
     ImageView imageView = (ImageView) findViewById(R.id.image_preview);
     imageView.setImageBitmap(bitmap);
@@ -218,6 +211,7 @@ public class DrupoidActivity extends Activity {
         dialog.dismiss();
       }
       // Show message and reset application.
+      // @todo check if we need to release memory ?
       Toast.makeText(getBaseContext(), sResponse, Toast.LENGTH_LONG).show();
       selectedImagePath = "";
       EditText title = (EditText) findViewById(R.id.title);
@@ -228,7 +222,7 @@ public class DrupoidActivity extends Activity {
   }
 
   /**
-   * Convert response.
+   * Convert response from HTTP request.
    */
   public String convertResponseToString(HttpResponse response) throws IllegalStateException, IOException {
 
@@ -259,5 +253,18 @@ public class DrupoidActivity extends Activity {
     }
 
     return res;
+  }
+
+  /**
+   * Get path of image.
+   */
+  public String getPath(Uri uri) {
+    String[] projection = {
+      MediaStore.Images.Media.DATA
+    };
+    Cursor cursor = managedQuery(uri, projection, null, null, null);
+    int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+    cursor.moveToFirst();
+    return cursor.getString(column_index);
   }
 }
