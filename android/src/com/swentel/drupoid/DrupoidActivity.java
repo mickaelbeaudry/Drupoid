@@ -162,7 +162,7 @@ public class DrupoidActivity extends Activity {
    * 
    * @todo do not use base64, but direct httpPost or another technique. Or at
    *       least make sure the scaling for sending or preview doesn't bork the
-   *       application.
+   *       application. Also do this in the DrupoidSetPreview() function.
    */
   class DrupoidUploadTask extends AsyncTask<Void, Void, String> {
 
