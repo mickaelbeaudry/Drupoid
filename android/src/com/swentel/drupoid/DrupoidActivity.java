@@ -54,6 +54,20 @@ public class DrupoidActivity extends Activity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
 
+    // Listen to share menu.
+    Intent intent = getIntent();
+    Bundle extras = intent.getExtras();
+    String action = intent.getAction();
+    if (Intent.ACTION_SEND.equals(action)) {
+      if (extras.containsKey(Intent.EXTRA_STREAM)) {
+        // @todo check from where this image comes. It seems that we need
+        // to handle paths differently when coming from the file explorer for
+        // instance.
+        Uri selectedImageUri = (Uri) extras.getParcelable(Intent.EXTRA_STREAM);
+        DrupoidSetPreview(selectedImageUri);
+      }
+    }
+
     // Add listener on image preview.
     imgView = (ImageView) findViewById(R.id.image_preview);
     imgView.setOnClickListener(onSelectPress);
@@ -101,11 +115,11 @@ public class DrupoidActivity extends Activity {
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     if (resultCode == RESULT_OK) {
       if (requestCode == SELECT_PICTURE) {
+        // @todo check from where this image comes. It seems that we need
+        // to handle paths differently when coming from the file explorer for
+        // instance.
         Uri selectedImageUri = data.getData();
-        selectedImagePath = getPath(selectedImageUri);
-        bitmap = BitmapFactory.decodeFile(selectedImagePath);
-        ImageView imageView = (ImageView) findViewById(R.id.image_preview);
-        imageView.setImageBitmap(bitmap);
+        DrupoidSetPreview(selectedImageUri);
       }
     }
   }
@@ -141,9 +155,21 @@ public class DrupoidActivity extends Activity {
   }
 
   /**
+   * Create preview
+   */
+  public void DrupoidSetPreview(Uri selectedImageUri) {
+    selectedImagePath = getPath(selectedImageUri);
+    bitmap = BitmapFactory.decodeFile(selectedImagePath);
+    ImageView imageView = (ImageView) findViewById(R.id.image_preview);
+    imageView.setImageBitmap(bitmap);
+  }
+
+  /**
    * Upload to Drupoid enabled server.
    * 
-   * @todo do not use base64, but direct httpPost.
+   * @todo do not use base64, but direct httpPost or another technique. Or at
+   *       least make sure the scaling for sending or preview doesn't bork the
+   *       application.
    */
   class DrupoidUploadTask extends AsyncTask<Void, Void, String> {
 
@@ -206,6 +232,7 @@ public class DrupoidActivity extends Activity {
    */
   public String convertResponseToString(HttpResponse response) throws IllegalStateException, IOException {
 
+    // @todo the result should be a json response instead of now plain text.
     String res = "";
     StringBuffer buffer = new StringBuffer();
     inputStream = response.getEntity().getContent();

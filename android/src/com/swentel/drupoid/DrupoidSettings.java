@@ -21,6 +21,7 @@ public class DrupoidSettings extends Activity {
    */
   protected void onCreate(Bundle savedInstanceState) {
 
+    // @todo instead of saving the password, use a token auth method.
     mPref = this.getSharedPreferences("mPref", MODE_PRIVATE);
 
     // Start settings activity.
