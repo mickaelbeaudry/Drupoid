@@ -1,17 +1,8 @@
 package com.swentel.drupoid;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
+import java.util.HashMap;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -218,39 +209,22 @@ public class DrupoidActivity extends Activity {
 
     protected String doInBackground(Void... unused) {
       String sResponse = "";
-      BitmapFactory.Options o2 = new BitmapFactory.Options();
-      int scale = 2;
-      o2.inSampleSize = scale;
-      Bitmap bitmap = BitmapFactory.decodeFile(selectedImagePath, o2);
-      ByteArrayOutputStream stream = new ByteArrayOutputStream();
-      bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream);
-      byte[] byte_arr = stream.toByteArray();
-      String image_str = Base64.encodeBytes(byte_arr);
 
       // Get settings.
-      String duser = mPref.getString("drupoid_username", "drupoid_username");
-      String dpass = mPref.getString("drupoid_password", "drupoid_password");
       String durl = mPref.getString("drupoid_url", "drupoid_url");
 
-      ArrayList<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
-      nameValuePairs.add(new BasicNameValuePair("request_type", "image_upload"));
-      nameValuePairs.add(new BasicNameValuePair("image", image_str));
-      nameValuePairs.add(new BasicNameValuePair("title", image_title));
-      nameValuePairs.add(new BasicNameValuePair("drupoid_password", dpass));
-      nameValuePairs.add(new BasicNameValuePair("drupoid_username", duser));
+      // Create Hashmap with extra data to send through.
+      HashMap<String, String> ExtraParams = new HashMap<String, String>();
+      ExtraParams.put("drupoid_username", mPref.getString("drupoid_username", "drupoid_username"));
+      ExtraParams.put("drupoid_password", mPref.getString("drupoid_password", "drupoid_password"));
+      ExtraParams.put("title", image_title);
+      ExtraParams.put("request_type", "image_upload");
 
+      // Perform request.
       try {
-        HttpClient httpclient = new DefaultHttpClient();
-        HttpPost httppost = new HttpPost(durl);
-        httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-        HttpResponse response = httpclient.execute(httppost);
-        sResponse = convertResponseToString(response);
+        HttpMultipartUpload.upload(durl, selectedImagePath, "image", ExtraParams);
       }
-      catch (Exception e) {
-        if (dialog.isShowing()) {
-          dialog.dismiss();
-        }
-        Log.d("Debug", "ERROR " + e.getMessage());
+      catch (IOException e) {
       }
 
       return sResponse;
@@ -269,40 +243,6 @@ public class DrupoidActivity extends Activity {
       ImageView imageView = (ImageView) findViewById(R.id.image_preview);
       imageView.setImageResource(R.drawable.insert_image);
     }
-  }
-
-  /**
-   * Convert response from HTTP request.
-   */
-  public String convertResponseToString(HttpResponse response) throws IllegalStateException, IOException {
-
-    // @todo the result should be a json response instead of now plain text.
-    String res = "";
-    StringBuffer buffer = new StringBuffer();
-    inputStream = response.getEntity().getContent();
-    int contentLength = (int) response.getEntity().getContentLength();
-
-    if (contentLength > 0) {
-      byte[] data = new byte[512];
-      int len = 0;
-      try {
-        while (-1 != (len = inputStream.read(data))) {
-          buffer.append(new String(data, 0, len));
-        }
-      }
-      catch (IOException e) {
-        e.printStackTrace();
-      }
-      try {
-        inputStream.close();
-      }
-      catch (IOException e) {
-        e.printStackTrace();
-      }
-      res = buffer.toString();
-    }
-
-    return res;
   }
 
   /**

@@ -47,12 +47,13 @@ function drupoid_permission() {
 function drupoid_config($form, $form_state) {
 
   $options = array();
+  $node_bundles = node_type_get_names();
   $instances = field_info_instances('node');
   foreach ($instances as $bundle => $fields) {
     foreach ($fields as $field_name => $field) {
       $field_info = field_info_field($field_name);
       if ($field_info['type'] == 'image') {
-        $options[$bundle . '|' . $field_name] = $bundle . ': ' . $field_name;
+        $options[$bundle . '|' . $field_name] = $node_bundles[$bundle] . ': ' . $field['label'];
       }
     }
   }
@@ -71,7 +72,7 @@ function drupoid_config($form, $form_state) {
   );
 
   $form['drupoid_debug'] = array(
-    '#title' => t('Log the $_POST variable to watchdog. Turn off in production.'),
+    '#title' => t('Log the $_POST & $_FILES variable to watchdog. Turn off in production.'),
     '#type' => 'checkbox',
     '#default_value' => variable_get('drupoid_debug'),
   );
@@ -86,7 +87,8 @@ function drupoid_request() {
 
   // Debug ?
   if (variable_get('drupoid_debug')) {
-    watchdog('drupoid_debug', print_r($_POST, TRUE));
+    watchdog('drupoid_debug_post', print_r($_POST, TRUE));
+    watchdog('drupoid_debug_files', print_r($_FILES, TRUE));
   }
 
   // Determine request type.
@@ -156,7 +158,7 @@ function drupoid_service_image_upload() {
   }
 
   // Image send through ?
-  if (!isset($_POST['image'])) {
+  if (!isset($_FILES['image']['name'])) {
     return array(
       'severity' => WATCHDOG_NOTICE,
       'toast' => t('No image found in request.'),
@@ -215,17 +217,22 @@ function drupoid_service_image_upload() {
 /**
  * Helper function to upload an image.
  *
- * @param $image_post_key
- *   The key in the $_POST variable to look for
+ * @param $image_key
+ *   The key in the $_FILES variable to look for
  *   the image.
  */
-function _drupoid_save_upload($image_post_key) {
+function _drupoid_save_upload($image_key) {
 
-  $image = $_POST[$image_post_key];
-  $binary = base64_decode($image);
-  $filename = 'public://android_' . time() . '.jpg';
+  $destination = 'android_' . time() . '.jpg';
 
-  return file_save_data($binary, $filename);
+  // We need to manipulate the $_FILES array so file.inc can handle it.
+  $_FILES['files']['name'][$image_key] = $destination;
+  $_FILES['files']['error'][$image_key] = $_FILES[$image_key]['error'];
+  $_FILES['files']['tmp_name'][$image_key] = $_FILES[$image_key]['tmp_name'];
+  $_FILES['files']['size'][$image_key] = $_FILES[$image_key]['size'];
+
+  // Create destination and save the file.
+  return file_save_upload($image_key, array(), "public://");
 }
 
 /**

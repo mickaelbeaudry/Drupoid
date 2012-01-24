@@ -18,4 +18,5 @@
     <string name="saved_prefs">The configuration has been saved.</string>
     <string name="no_connection">You have no network connection. You will not be able to upload images.</string>
     <string name="close">Close</string>
+    <string name="error_upload">There was an error with the upload, try again later.</string>
 </resources>
