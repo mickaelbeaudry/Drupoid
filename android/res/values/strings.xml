@@ -16,4 +16,6 @@
     <string name="save_preferences">Save settings</string>
     <string name="missing_prefs">Please enter all settings.</string>
     <string name="saved_prefs">The configuration has been saved.</string>
+    <string name="no_connection">You have no network connection. You will not be able to upload images.</string>
+    <string name="close">Close</string>
 </resources>

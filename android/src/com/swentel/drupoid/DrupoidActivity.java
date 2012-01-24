@@ -14,12 +14,16 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -52,7 +56,6 @@ public class DrupoidActivity extends Activity {
     mPref = this.getSharedPreferences("mPref", MODE_PRIVATE);
 
     // Start main activity.
-    // @todo show warning when not online.
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
 
@@ -67,13 +70,25 @@ public class DrupoidActivity extends Activity {
       }
     }
 
-    // Add listener on image preview.
-    imgView = (ImageView) findViewById(R.id.image_preview);
-    imgView.setOnClickListener(onSelectPress);
+    if (DrupoidIsOnline()) {
+      // Add listener on image preview.
+      imgView = (ImageView) findViewById(R.id.image_preview);
+      imgView.setOnClickListener(onSelectPress);
 
-    // Add listener on upload button.
-    Button upload = (Button) findViewById(R.id.upload_button);
-    upload.setOnClickListener(onUploadPress);
+      // Add listener on upload button.
+      Button upload = (Button) findViewById(R.id.upload_button);
+      upload.setOnClickListener(onUploadPress);
+    }
+    else {
+      AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+      alertDialog.setMessage(getString(R.string.no_connection));
+      alertDialog.setButton(getString(R.string.close), new DialogInterface.OnClickListener() {
+        public void onClick(DialogInterface dialog, int which) {
+          dialog.cancel();
+        }
+      });
+      alertDialog.show();
+    }
   }
 
   /**
@@ -136,6 +151,21 @@ public class DrupoidActivity extends Activity {
       }
     }
   };
+
+  /**
+   * Check if we are connected.
+   */
+  private boolean DrupoidIsOnline() {
+    ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+    // test for connection
+    if (cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isAvailable() && cm.getActiveNetworkInfo().isConnected()) {
+      return true;
+    }
+    else {
+      Log.v("Debug", "Internet Connection Not Present");
+      return false;
+    }
+  }
 
   /**
    * Set preview in the imageView.
@@ -224,7 +254,6 @@ public class DrupoidActivity extends Activity {
         dialog.dismiss();
       }
       // Show message and reset application.
-      // @todo check if we need to release memory ?
       Toast.makeText(getBaseContext(), sResponse, Toast.LENGTH_LONG).show();
       selectedImagePath = "";
       EditText title = (EditText) findViewById(R.id.title);
