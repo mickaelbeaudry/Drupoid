@@ -222,7 +222,7 @@ public class DrupoidActivity extends Activity {
 
       // Perform request.
       try {
-        HttpMultipartUpload.upload(durl, selectedImagePath, "image", ExtraParams);
+        sResponse = HttpMultipartUpload.upload(durl, selectedImagePath, "image", ExtraParams);
       }
       catch (IOException e) {
       }

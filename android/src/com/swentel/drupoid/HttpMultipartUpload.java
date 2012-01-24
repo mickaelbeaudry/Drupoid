@@ -84,21 +84,25 @@ public class HttpMultipartUpload {
     }
 
     // Read the server response.
+    String sResponse = "";
     try {
       dis = new DataInputStream(conn.getInputStream());
       StringBuilder response = new StringBuilder();
 
       String line;
+      // @todo this should read in a jSon response.
       while ((line = dis.readLine()) != null) {
-        response.append(line).append('\n');
+        response.append(line);
       }
 
-      return response.toString();
+      sResponse = response.toString();
     }
     finally {
       if (dis != null) {
         dis.close();
       }
     }
+
+    return sResponse;
   }
 }
