@@ -152,7 +152,18 @@ public class DrupoidActivity extends Activity {
     }
 
     // Create preview.
-    bitmap = BitmapFactory.decodeFile(selectedImagePath);
+    int maxSize = 300;
+    BitmapFactory.Options opts = new BitmapFactory.Options();
+    opts.inJustDecodeBounds = true;
+    BitmapFactory.decodeFile(selectedImagePath, opts);
+    int w = opts.outHeight, h = opts.outHeight;
+    int maxDim = (w > h) ? w : h;
+
+    int inSample = maxDim / maxSize;
+    opts = new BitmapFactory.Options();
+    opts.inSampleSize = inSample;
+
+    bitmap = BitmapFactory.decodeFile(selectedImagePath, opts);
     ImageView imageView = (ImageView) findViewById(R.id.image_preview);
     imageView.setImageBitmap(bitmap);
   }
