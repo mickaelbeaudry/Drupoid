@@ -28,6 +28,13 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+/**
+ * Main Activity.
+ * 
+ * Wild ideas - upload custom icon - change name of application.
+ * 
+ * @todo in general better exception handling, json response.
+ */
 public class DrupoidActivity extends Activity {
 
   private ImageView imgView;
@@ -212,14 +219,12 @@ public class DrupoidActivity extends Activity {
 
       // Create Hashmap with extra data to send through.
       HashMap<String, String> ExtraParams = new HashMap<String, String>();
-      ExtraParams.put("drupoid_username", mPref.getString("drupoid_username", "drupoid_username"));
-      ExtraParams.put("drupoid_password", mPref.getString("drupoid_password", "drupoid_password"));
       ExtraParams.put("title", image_title);
       ExtraParams.put("request_type", "image_upload");
 
       // Perform request.
       try {
-        sResponse = HttpMultipartUpload.upload(durl, selectedImagePath, "image", ExtraParams);
+        sResponse = HttpMultipartRequest.execute(durl, selectedImagePath, "image", ExtraParams, 1);
       }
       catch (IOException e) {
       }

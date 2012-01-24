@@ -11,8 +11,8 @@
 function drupoid_menu() {
   $items = array();
 
-  $items['drupoid'] = array(
-    'title' => 'Drupoid',
+  $items[variable_get('drupoid_endpoint', 'drupoid')] = array(
+    'title' => 'Drupoid request',
     'page callback' => 'drupoid_request',
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
@@ -22,7 +22,7 @@ function drupoid_menu() {
     'title' => 'Drupoid',
     'description' => 'Configure the settings for Android application.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('drupoid_config'),
+    'page arguments' => array('drupoid_configuration'),
     'access arguments' => array('administer drupoid'),
   );
 
@@ -38,13 +38,25 @@ function drupoid_permission() {
       'title' => t('Administer Drupoid'),
       'description' => t('Configure your Drupoid settings')
     ),
+    'upload images via app' => array(
+      'title' => t('Upload images'),
+      'description' => t('Give users the privilege to upload images from the application.')
+    ),
   );
 }
 
 /**
  * Menu callback: configuration form.
  */
-function drupoid_config($form, $form_state) {
+function drupoid_configuration($form, $form_state) {
+  global $base_url;
+
+  $form['drupoid_endpoint'] = array(
+    '#title' => t('Endpoint'),
+    '#description' => t('The end point URL for your request. Current endpoint is @end_point', array('@end_point' => $base_url . '/' . variable_get('drupoind_endpoint', 'drupoid'))),
+    '#type' => 'textfield',
+    '#default_value' => variable_get('drupoid_endpoint', 'drupoid'),
+  );
 
   $options = array();
   $node_bundles = node_type_get_names();
@@ -81,7 +93,7 @@ function drupoid_config($form, $form_state) {
 }
 
 /**
- * Menu callback: perform the drupoid request.
+ * Menu callback: do a drupoid request.
  */
 function drupoid_request() {
 
@@ -92,25 +104,40 @@ function drupoid_request() {
   }
 
   // Determine request type.
-  $request_type = _drupoid_get_request_type();
+  $request_type = drupoid_request_type();
   if (!$request_type) {
-    drupoid_end_request(t('Invalid request type.'), WATCHDOG_WARNING);
+    drupoid_request_end(t('Invalid request type.'), WATCHDOG_WARNING);
   }
 
-  // Always authenticate.
-  if (!drupoid_service_authenticate()) {
-    drupoid_end_request(t('Sorry, unrecognized username or password.'), WATCHDOG_NOTICE);
+  // Authenticate if requested.
+  if ($request_type == 'drupoid_auth') {
+    drupoid_service_authenticate();
   }
 
-  // If only authenticate, return here.
-  if ($request_type == 'authenticate') {
-    drupoid_end_request(t('Authentication succeeded for @user', array('@user' => $_POST['drupoid_username'])), WATCHDOG_NOTICE);
+  // Check if the user is authenticated.
+  if ($GLOBALS['user']->uid == 0) {
+    drupal_add_http_header('Status', '403 Forbidden');
+    drupoid_request_end(t('Could not authenticate this request. Please login via the settings menu.'), WATCHDOG_WARNING);
   }
 
   // Delegate to separate function.
   $callback = 'drupoid_service_'  . $request_type;
   $result = $callback();
-  drupoid_end_request($result['toast'], $result['severity']);
+  drupoid_request_end($result['toast'], $result['severity']);
+}
+
+/**
+ * Function to determine the request type.
+ */
+function drupoid_request_type() {
+
+  $request_type = isset($_POST['request_type']) ? $_POST['request_type'] : FALSE;
+
+  if (in_array($request_type, array('drupoid_auth', 'image_upload'))) {
+    return $request_type;
+  }
+
+  return FALSE;
 }
 
 /**
@@ -121,27 +148,37 @@ function drupoid_request() {
  * @param $severity
  *   A watchdog constant.
  */
-function drupoid_end_request($toast, $severity) {
+function drupoid_request_end($toast, $severity) {
+  // Ignore devel.
+  $GLOBALS['devel_shutdown'] = FALSE;
+  // Commit the user session, if needed.
+  drupal_session_commit();
+  // Write watchdog and print result.
   watchdog('drupoid', $toast, array(), $severity);
   print $toast;
   exit();
 }
 
 /**
- * Drupoid authenticate service.
+ * Drupoid authentication service.
  */
 function drupoid_service_authenticate() {
 
   // We need 2 variables at least.
-  if (!isset($_POST['drupoid_username']) && !isset($_POST['drupoid_password'])) {
-    return array(
-      'severity' => WATCHDOG_WARNING,
-      'toast' => t('No username or password supplied.'),
-    );
+  if (!isset($_POST['drupoid_username']) || !isset($_POST['drupoid_password'])) {
+    drupoid_request_end(t('No username or password supplied.'), WATCHDOG_WARNING);
   }
 
-  // Authenticate against user.
-  return user_authenticate($_POST['drupoid_username'], $_POST['drupoid_password']);
+  // Authenticate.
+  if ($uid = user_authenticate($_POST['drupoid_username'], $_POST['drupoid_password'])) {
+    global $user;
+    $edit = array();
+    $user = user_load($uid);
+    user_login_finalize($edit);
+    drupoid_request_end(t('Authentication succeeded for @user', array('@user' => $_POST['drupoid_username'])), WATCHDOG_NOTICE);
+  }
+
+  drupoid_request_end(t('Sorry, unrecognized username or password.'), WATCHDOG_NOTICE);
 }
 
 /**
@@ -149,7 +186,17 @@ function drupoid_service_authenticate() {
  */
 function drupoid_service_image_upload() {
 
-    // Title send through ?
+  // Access
+  if (!user_access('upload images via app')) {
+    // @todo this could be nicer. we already have a 403 above.
+    drupal_add_http_header('Status', '403 Forbidden');
+    return array(
+      'severity' => WATCHDOG_NOTICE,
+      'toast' => t('User has no permission to upload images.'),
+    );
+  }
+
+  // Title send through ?
   if (!isset($_POST['title'])) {
     return array(
       'severity' => WATCHDOG_NOTICE,
@@ -176,10 +223,8 @@ function drupoid_service_image_upload() {
   // Basic checks are ok. Let's move on.
   $severity = WATCHDOG_NOTICE;
 
-  // Try to save the file.
-  $file = _drupoid_save_upload('image');
-
-  if ($file) {
+  // Try to save the node and file.
+  if ($file = _drupoid_save_upload('image')) {
 
     // Build node.
     list($bundle, $image_field_name) = explode('|', variable_get('drupoid_image_field'));
@@ -187,7 +232,7 @@ function drupoid_service_image_upload() {
     $node->title = $_POST['title'];
     $node->type = $bundle;
     $node->status = variable_get('drupoid_status', FALSE);
-    $node->name = $_POST['drupoid_username'];
+    $node->name = $GLOBALS['user']->name;
     $node->language = LANGUAGE_NONE;
     $node->{$image_field_name}[LANGUAGE_NONE][0] = (array) $file;
 
@@ -233,18 +278,4 @@ function _drupoid_save_upload($image_key) {
 
   // Create destination and save the file.
   return file_save_upload($image_key, array(), "public://");
-}
-
-/**
- * Helper function to determine the request type.
- */
-function _drupoid_get_request_type() {
-
-  $request_type = isset($_POST['request_type']) ? $_POST['request_type'] : FALSE;
-
-  if (in_array($request_type, array('authenticate', 'image_upload'))) {
-    return $request_type;
-  }
-
-  return FALSE;
 }
