@@ -61,25 +61,13 @@ public class DrupoidActivity extends Activity {
       }
     }
 
-    if (DrupoidIsOnline()) {
-      // Add listener on image preview.
-      imgView = (ImageView) findViewById(R.id.image_preview);
-      imgView.setOnClickListener(onSelectPress);
+    // Add listener on image preview.
+    imgView = (ImageView) findViewById(R.id.image_preview);
+    imgView.setOnClickListener(onSelectPress);
 
-      // Add listener on upload button.
-      Button upload = (Button) findViewById(R.id.upload_button);
-      upload.setOnClickListener(onUploadPress);
-    }
-    else {
-      AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-      alertDialog.setMessage(getString(R.string.no_connection));
-      alertDialog.setButton(getString(R.string.close), new DialogInterface.OnClickListener() {
-        public void onClick(DialogInterface dialog, int which) {
-          dialog.cancel();
-        }
-      });
-      alertDialog.show();
-    }
+    // Add listener on upload button.
+    Button upload = (Button) findViewById(R.id.upload_button);
+    upload.setOnClickListener(onUploadPress);
   }
 
   /**
@@ -131,14 +119,27 @@ public class DrupoidActivity extends Activity {
    */
   private final View.OnClickListener onUploadPress = new View.OnClickListener() {
     public void onClick(View v) {
-      EditText title = (EditText) findViewById(R.id.title);
-      if (title.getText().toString().length() > 0 && selectedImagePath.toString().length() > 0) {
-        image_title = title.getText().toString();
-        dialog = ProgressDialog.show(DrupoidActivity.this, getString(R.string.uploading), getString(R.string.please_wait), true);
-        new DrupoidUploadTask().execute();
+
+      if (!DrupoidIsOnline()) {
+        AlertDialog alertDialog = new AlertDialog.Builder(DrupoidActivity.this).create();
+        alertDialog.setMessage(getString(R.string.no_connection));
+        alertDialog.setButton(getString(R.string.close), new DialogInterface.OnClickListener() {
+          public void onClick(DialogInterface dialog, int which) {
+            dialog.cancel();
+          }
+        });
+        alertDialog.show();
       }
       else {
-        Toast.makeText(getBaseContext(), R.string.missing_data, Toast.LENGTH_LONG).show();
+        EditText title = (EditText) findViewById(R.id.title);
+        if (title.getText().toString().length() > 0 && selectedImagePath.toString().length() > 0) {
+          image_title = title.getText().toString();
+          dialog = ProgressDialog.show(DrupoidActivity.this, getString(R.string.uploading), getString(R.string.please_wait), true);
+          new DrupoidUploadTask().execute();
+        }
+        else {
+          Toast.makeText(getBaseContext(), R.string.missing_data, Toast.LENGTH_LONG).show();
+        }
       }
     }
   };
