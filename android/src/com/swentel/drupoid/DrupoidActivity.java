@@ -184,7 +184,15 @@ public class DrupoidActivity extends Activity {
     }
 
     // Create preview.
-    int maxSize = 300;
+    bitmap = DrupoidCalculateSize(selectedImagePath, 300);
+    ImageView imageView = (ImageView) findViewById(R.id.image_preview);
+    imageView.setImageBitmap(bitmap);
+  }
+
+  /**
+   * Calculate size of preview.
+   */
+  private Bitmap DrupoidCalculateSize(String selectedImagePath, int maxSize) {
     BitmapFactory.Options opts = new BitmapFactory.Options();
     opts.inJustDecodeBounds = true;
     BitmapFactory.decodeFile(selectedImagePath, opts);
@@ -194,10 +202,9 @@ public class DrupoidActivity extends Activity {
     int inSample = maxDim / maxSize;
     opts = new BitmapFactory.Options();
     opts.inSampleSize = inSample;
-
     bitmap = BitmapFactory.decodeFile(selectedImagePath, opts);
-    ImageView imageView = (ImageView) findViewById(R.id.image_preview);
-    imageView.setImageBitmap(bitmap);
+
+    return bitmap;
   }
 
   /**
@@ -256,6 +263,7 @@ public class DrupoidActivity extends Activity {
       // Show message and reset application.
       Toast.makeText(getBaseContext(), sResponse, Toast.LENGTH_LONG).show();
       selectedImagePath = "";
+      bitmap = null;
       EditText title = (EditText) findViewById(R.id.title);
       title.setText("");
       ImageView imageView = (ImageView) findViewById(R.id.image_preview);
