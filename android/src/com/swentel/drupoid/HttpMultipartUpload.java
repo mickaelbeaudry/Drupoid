@@ -90,7 +90,6 @@ public class HttpMultipartUpload {
       StringBuilder response = new StringBuilder();
 
       String line;
-      // @todo this should read in a jSon response.
       while ((line = dis.readLine()) != null) {
         response.append(line);
       }
