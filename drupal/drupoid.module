@@ -111,8 +111,7 @@ function drupoid_request() {
 
   // Check if the user is authenticated.
   if ($GLOBALS['user']->uid == 0 && $request_type != "authenticate") {
-    drupal_add_http_header('Status', '403 Forbidden');
-    drupoid_request_end(t('Could not authenticate this request. Please login via the settings menu.'), WATCHDOG_WARNING);
+    drupoid_request_end(t('Please sign in to upload images.'), WATCHDOG_WARNING);
   }
 
   // Delegate to separate function.
@@ -128,7 +127,7 @@ function drupoid_request_type() {
 
   $request_type = isset($_POST['request_type']) ? $_POST['request_type'] : FALSE;
 
-  if (in_array($request_type, array('authenticate', 'image_upload'))) {
+  if (in_array($request_type, array('logout', 'authenticate', 'image_upload'))) {
     return $request_type;
   }
 
@@ -201,7 +200,7 @@ function drupoid_service_logout() {
     session_destroy();
 
     return array(
-      'toast' => t('Session closed for %name.', array('%name' => $name)),
+      'toast' => t('Session closed for @name.', array('@name' => $name)),
       'severity' => WATCHDOG_NOTICE
     );
   }
@@ -220,8 +219,6 @@ function drupoid_service_image_upload() {
 
   // Access
   if (!user_access('upload images via app')) {
-    // @todo this could be nicer. we already have a 403 above.
-    drupal_add_http_header('Status', '403 Forbidden');
     return array(
       'severity' => WATCHDOG_NOTICE,
       'toast' => t('User has no permission to upload images.'),

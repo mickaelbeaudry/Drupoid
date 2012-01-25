@@ -18,6 +18,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -109,8 +110,15 @@ public class DrupoidActivity extends Activity {
    * Menu selection.
    */
   public boolean onOptionsItemSelected(MenuItem item) {
-    // @todo logging out.
-    return false;
+    if (!DrupoidIsOnline()) {
+      DrupoidNoConnection();
+      return false;
+    }
+
+    dialog = ProgressDialog.show(DrupoidActivity.this, getString(R.string.logging_out), getString(R.string.please_wait), true);
+    new DrupoidLogoutTask().execute();
+
+    return true;
   }
 
   /**
@@ -344,6 +352,47 @@ public class DrupoidActivity extends Activity {
       // @todo really check response.
       Common.drupoidAuthenticated = true;
       setContentView(R.layout.main);
+    }
+  }
+
+  /**
+   * Drupoid Logout.
+   */
+  class DrupoidLogoutTask extends AsyncTask<Void, Void, String> {
+
+    protected String doInBackground(Void... unused) {
+      Log.d("begint-async", "OK");
+      String sResponse = "";
+
+      // Get endpoint.
+      String drupoidEndpoint = Common.getPref(getBaseContext(), "drupoidEndpoint", "");
+
+      // Parameters to send through.
+      HashMap<String, String> Params = new HashMap<String, String>();
+      Params.put("request_type", "logout");
+      Log.d("hier-e", "OK");
+      // Perform request.
+      try {
+        Log.d("net-voor", "OK");
+        sResponse = HttpMultipartRequest.execute(getBaseContext(), drupoidEndpoint, Params, Common.SEND_COOKIE, "", "");
+        Log.d("net-achter", "OK");
+      }
+      catch (IOException e) {
+      }
+
+      return sResponse;
+    }
+
+    protected void onPostExecute(String sResponse) {
+      if (dialog.isShowing()) {
+        dialog.dismiss();
+      }
+      // Show message and reset application.
+      Toast.makeText(getBaseContext(), sResponse, Toast.LENGTH_LONG).show();
+      // @todo make sure response is 200.
+      Common.delPref(getBaseContext(), "drupoidCookie");
+      Common.drupoidAuthenticated = false;
+      setContentView(R.layout.authentication);
     }
   }
 }

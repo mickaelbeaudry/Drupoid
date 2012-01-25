@@ -101,7 +101,6 @@ public class HttpMultipartRequest {
         String headerName = null;
         for (int i = 1; (headerName = conn.getHeaderFieldKey(i)) != null; i++) {
           if (headerName.equals("Set-Cookie")) {
-            // @todo only session id cookie.
             String cookie = conn.getHeaderField(i);
             cookie = cookie.substring(0, cookie.indexOf(";"));
             if (cookie.substring(0, 4).equals("SESS")) {

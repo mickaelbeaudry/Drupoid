@@ -31,6 +31,19 @@ public class Common {
   }
 
   /**
+   * Delete a preference.
+   * 
+   * @param ctxt
+   *        The current context.
+   * @param pref
+   *        The name of the preference
+   */
+  public static void delPref(Context ctxt, String pref) {
+    SharedPreferences sharedPreferences = ctxt.getSharedPreferences("drupoid", Context.MODE_PRIVATE);
+    sharedPreferences.edit().remove(pref).apply();
+  }
+
+  /**
    * Set a preference.
    * 
    * @param ctxt
