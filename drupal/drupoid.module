@@ -109,13 +109,8 @@ function drupoid_request() {
     drupoid_request_end(t('Invalid request type.'), WATCHDOG_WARNING);
   }
 
-  // Authenticate if requested.
-  if ($request_type == 'drupoid_auth') {
-    drupoid_service_authenticate();
-  }
-
   // Check if the user is authenticated.
-  if ($GLOBALS['user']->uid == 0) {
+  if ($GLOBALS['user']->uid == 0 && $request_type != "authenticate") {
     drupal_add_http_header('Status', '403 Forbidden');
     drupoid_request_end(t('Could not authenticate this request. Please login via the settings menu.'), WATCHDOG_WARNING);
   }
@@ -133,7 +128,7 @@ function drupoid_request_type() {
 
   $request_type = isset($_POST['request_type']) ? $_POST['request_type'] : FALSE;
 
-  if (in_array($request_type, array('drupoid_auth', 'image_upload'))) {
+  if (in_array($request_type, array('authenticate', 'image_upload'))) {
     return $request_type;
   }
 
@@ -166,7 +161,10 @@ function drupoid_service_authenticate() {
 
   // We need 2 variables at least.
   if (!isset($_POST['drupoid_username']) || !isset($_POST['drupoid_password'])) {
-    drupoid_request_end(t('No username or password supplied.'), WATCHDOG_WARNING);
+    return array(
+      'toast' => t('No username or password supplied.'),
+      'severity' => WATCHDOG_WARNING
+    );
   }
 
   // Authenticate.
@@ -175,10 +173,44 @@ function drupoid_service_authenticate() {
     $edit = array();
     $user = user_load($uid);
     user_login_finalize($edit);
-    drupoid_request_end(t('Authentication succeeded for @user', array('@user' => $_POST['drupoid_username'])), WATCHDOG_NOTICE);
+    return array(
+      'toast' => t('Authentication succeeded for @user', array('@user' => $_POST['drupoid_username'])),
+      'severity' => WATCHDOG_NOTICE
+    );
   }
 
-  drupoid_request_end(t('Sorry, unrecognized username or password.'), WATCHDOG_NOTICE);
+  return array(
+    'toast' => t('Sorry, unrecognized username or password.'),
+    'severity' => WATCHDOG_NOTICE
+  );
+}
+
+/**
+ * Drupoid logout service.
+ */
+function drupoid_service_logout() {
+  global $user;
+
+  if ($user->uid > 0) {
+    $name = $user->name;
+
+    // Invoke user_logout hook.
+    module_invoke_all('user_logout', $user);
+
+    // Destroy the current session, and reset $user to the anonymous user.
+    session_destroy();
+
+    return array(
+      'toast' => t('Session closed for %name.', array('%name' => $name)),
+      'severity' => WATCHDOG_NOTICE
+    );
+  }
+  else {
+    return array(
+      'toast' => t('Session already closed'),
+      'severity' => WATCHDOG_NOTICE
+    );
+  }
 }
 
 /**

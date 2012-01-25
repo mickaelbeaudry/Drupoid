@@ -9,28 +9,29 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 
-import android.util.Log;
+import android.content.Context;
 
-/**
- * Based upon
- * http://stackoverflow.com/questions/4966910/androidhow-to-upload-mp3
- * -file-to-http-server.
- */
 public class HttpMultipartRequest {
+
   static String lineEnd = "\r\n";
   static String twoHyphens = "--";
   static String boundary = "AaB03x87yxdkjnxvi7";
 
   /**
+   * @param ctxt
+   *        The context.
    * @param urlString
-   * @param filePath
-   * @param fileParameterName
+   *        The URL to connect to.
    * @param parameters
-   * @param cookieType
-   * 
-   * @todo document better + set optionals to end.
+   *        A collection of key value pairs to send along
+   * @param cookieAction
+   *        Whether we need to save or send a session cookie.
+   * @param filePath
+   *        The full file path on the device.
+   * @param fileParameterName
+   *        The key to send in the request.
    */
-  public static String execute(String urlString, String filePath, String fileParameterName, HashMap<String, String> parameters, int cookieType) throws IOException {
+  public static String execute(Context ctxt, String urlString, HashMap<String, String> parameters, int cookieAction, String filePath, String fileParameterName) throws IOException {
     HttpURLConnection conn = null;
     DataOutputStream dos = null;
     DataInputStream dis = null;
@@ -46,13 +47,9 @@ public class HttpMultipartRequest {
       conn = (HttpURLConnection) url.openConnection();
 
       // Send cookie ?
-      // Seriously, use a constant here.
-      // currently hardcoded, next up, store this in myprefs ?
-      // lookup info re: storing session cookies in android.
-      // maybe use cookiemanager ?
-      if (cookieType == 1) {
-        String myCookie = "SESS779077e599724a8ee5233b8788a3e237=4ATqxJNvQ4MSee1NQ9Nl1aok_kPqVZd6x5IUdYW3Yyc";
-        conn.setRequestProperty("Cookie", myCookie);
+      if (cookieAction == Common.SEND_COOKIE) {
+        String drupoidCookie = Common.getPref(ctxt, "drupoidCookie", "");
+        conn.setRequestProperty("Cookie", drupoidCookie);
       }
 
       // Allow Inputs
@@ -95,23 +92,19 @@ public class HttpMultipartRequest {
         dos.writeBytes(parameters.get(name));
       }
 
-      // Send multipart form data necessary after file data.
+      // Send form data necessary after file data.
       dos.writeBytes(lineEnd);
       dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
       dos.flush();
 
-      // @todo Seriously, use a constant here.
-      if (cookieType == 0) {
+      if (cookieAction == Common.SAVE_COOKIE) {
         String headerName = null;
         for (int i = 1; (headerName = conn.getHeaderFieldKey(i)) != null; i++) {
           if (headerName.equals("Set-Cookie")) {
             // @todo only session id cookie.
             String cookie = conn.getHeaderField(i);
             cookie = cookie.substring(0, cookie.indexOf(";"));
-            String cookieName = cookie.substring(0, cookie.indexOf("="));
-            String cookieValue = cookie.substring(cookie.indexOf("=") + 1, cookie.length());
-            Log.d("Name", cookieName);
-            Log.d("value", cookieValue);
+            Common.setPref(ctxt, "drupoidCookie", cookie);
           }
         }
       }
@@ -126,6 +119,7 @@ public class HttpMultipartRequest {
     }
 
     // Read the server response.
+    // @todo Should become JSON response, with better handling of exceptions.
     String sResponse = "";
     try {
       dis = new DataInputStream(conn.getInputStream());

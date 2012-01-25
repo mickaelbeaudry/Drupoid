@@ -30,10 +30,6 @@ import android.widget.Toast;
 
 /**
  * Main Activity.
- * 
- * Wild ideas - upload custom icon - change name of application.
- * 
- * @todo in general better exception handling, json response.
  */
 public class DrupoidActivity extends Activity {
 
@@ -81,6 +77,12 @@ public class DrupoidActivity extends Activity {
    * Create options menu.
    */
   public boolean onCreateOptionsMenu(Menu menu) {
+    // @todo this shouldn't be a menu, but become a different layout.
+    // based on authentication status, we either show login layout
+    // or the app (with a logout button), for that we also need to
+    // convert the response from the server into a json object
+    // so we can return with a 'status' and 'result' key in the
+    // the json.
     menu.add(Menu.NONE, 0, 0, getString(R.string.settings)).setIcon(android.R.drawable.ic_menu_preferences);
     return super.onCreateOptionsMenu(menu);
   }
@@ -156,7 +158,7 @@ public class DrupoidActivity extends Activity {
    */
   private boolean DrupoidIsOnline() {
     ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-    // test for connection
+    // Test for connection
     if (cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isAvailable() && cm.getActiveNetworkInfo().isConnected()) {
       return true;
     }
@@ -217,14 +219,14 @@ public class DrupoidActivity extends Activity {
       // Get settings.
       String durl = mPref.getString("drupoid_url", "drupoid_url");
 
-      // Create Hashmap with extra data to send through.
-      HashMap<String, String> ExtraParams = new HashMap<String, String>();
-      ExtraParams.put("title", image_title);
-      ExtraParams.put("request_type", "image_upload");
+      // Parameters to send through.
+      HashMap<String, String> Params = new HashMap<String, String>();
+      Params.put("title", image_title);
+      Params.put("request_type", "image_upload");
 
       // Perform request.
       try {
-        sResponse = HttpMultipartRequest.execute(durl, selectedImagePath, "image", ExtraParams, 1);
+        sResponse = HttpMultipartRequest.execute(getBaseContext(), durl, Params, Common.SEND_COOKIE, selectedImagePath, "image");
       }
       catch (IOException e) {
       }
