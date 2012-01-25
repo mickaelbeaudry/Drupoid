@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
 /**
- * Common class with various variables, getters, setters and helper methods.
+ * Common class.
  */
 public class Common {
 

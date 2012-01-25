@@ -32,7 +32,6 @@ import android.widget.Toast;
  */
 public class DrupoidActivity extends Activity {
 
-  private ImageView imgView;
   private Bitmap bitmap;
   private String image_title;
   private String selectedImagePath;
@@ -56,22 +55,14 @@ public class DrupoidActivity extends Activity {
     String drupoidEndpoint = Common.getPref(getBaseContext(), "drupoidEndpoint", "");
     String drupoidCookie = Common.getPref(getBaseContext(), "drupoidCookie", "");
     if (drupoidEndpoint.length() == 0 || drupoidCookie.length() == 0) {
-      setContentView(R.layout.authentication);
-
-      // Set endpoint if available.
-      EditText drupoid_url = (EditText) findViewById(R.id.drupoid_url);
-      drupoid_url.setText(Common.getPref(getBaseContext(), "drupoidEndpoint", ""));
-
-      // Add listener on login button.
-      Button login = (Button) findViewById(R.id.login);
-      login.setOnClickListener(onLoginPress);
+      DrupoidSetAuthLayout();
     }
     else {
       // Authenticated.
       Common.drupoidAuthenticated = true;
 
-      // User main layout.
-      setContentView(R.layout.main);
+      // Set upload layout.
+      DrupoidSetUploadLayout();
 
       // Listen to share menu.
       Intent intent = getIntent();
@@ -83,14 +74,6 @@ public class DrupoidActivity extends Activity {
           DrupoidSetPreview(selectedImageUri);
         }
       }
-
-      // Add listener on image preview.
-      imgView = (ImageView) findViewById(R.id.image_preview);
-      imgView.setOnClickListener(onSelectPress);
-
-      // Add listener on upload button.
-      Button upload = (Button) findViewById(R.id.upload_button);
-      upload.setOnClickListener(onUploadPress);
     }
   }
 
@@ -99,7 +82,8 @@ public class DrupoidActivity extends Activity {
    */
   public boolean onCreateOptionsMenu(Menu menu) {
     if (Common.drupoidAuthenticated) {
-      menu.add(Menu.NONE, 0, 0, getString(R.string.logout)).setIcon(android.R.drawable.star_big_on);
+      // @todo find nicer button.
+      menu.add(Menu.NONE, 0, 0, getString(R.string.logout)).setIcon(android.R.drawable.button_onoff_indicator_off);
       return super.onCreateOptionsMenu(menu);
     }
 
@@ -223,10 +207,40 @@ public class DrupoidActivity extends Activity {
   }
 
   /**
+   * Set upload layout and add listeners.
+   */
+  public void DrupoidSetUploadLayout() {
+    setContentView(R.layout.main);
+
+    Button upload = (Button) findViewById(R.id.upload_button);
+    upload.setOnClickListener(onUploadPress);
+    ImageView imgView = (ImageView) findViewById(R.id.image_preview);
+    imgView.setOnClickListener(onSelectPress);
+  }
+
+  /**
+   * Set the login layout and listeners.
+   */
+  public void DrupoidSetAuthLayout() {
+    setContentView(R.layout.authentication);
+
+    Button login = (Button) findViewById(R.id.login);
+    login.setOnClickListener(onLoginPress);
+
+    // Set endpoint if available.
+    EditText drupoid_url = (EditText) findViewById(R.id.drupoid_url);
+    String drupoidEndpoint = Common.getPref(getBaseContext(), "drupoidEndpoint", "");
+    Log.d("endpoint", drupoidEndpoint);
+    drupoid_url.setText(drupoidEndpoint);
+  }
+
+  /**
    * Show dialog.
    */
   public void DrupoidNoConnection() {
     AlertDialog alertDialog = new AlertDialog.Builder(DrupoidActivity.this).create();
+    // @todo can we uberhaupt set an icon?
+    alertDialog.setIcon(android.R.drawable.alert_dark_frame);
     alertDialog.setMessage(getString(R.string.no_connection));
     alertDialog.setButton(getString(R.string.close), new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int which) {
@@ -351,7 +365,7 @@ public class DrupoidActivity extends Activity {
       Toast.makeText(getBaseContext(), sResponse, Toast.LENGTH_LONG).show();
       // @todo really check response.
       Common.drupoidAuthenticated = true;
-      setContentView(R.layout.main);
+      DrupoidSetUploadLayout();
     }
   }
 
@@ -361,7 +375,6 @@ public class DrupoidActivity extends Activity {
   class DrupoidLogoutTask extends AsyncTask<Void, Void, String> {
 
     protected String doInBackground(Void... unused) {
-      Log.d("begint-async", "OK");
       String sResponse = "";
 
       // Get endpoint.
@@ -370,12 +383,9 @@ public class DrupoidActivity extends Activity {
       // Parameters to send through.
       HashMap<String, String> Params = new HashMap<String, String>();
       Params.put("request_type", "logout");
-      Log.d("hier-e", "OK");
       // Perform request.
       try {
-        Log.d("net-voor", "OK");
         sResponse = HttpMultipartRequest.execute(getBaseContext(), drupoidEndpoint, Params, Common.SEND_COOKIE, "", "");
-        Log.d("net-achter", "OK");
       }
       catch (IOException e) {
       }
@@ -392,7 +402,7 @@ public class DrupoidActivity extends Activity {
       // @todo make sure response is 200.
       Common.delPref(getBaseContext(), "drupoidCookie");
       Common.drupoidAuthenticated = false;
-      setContentView(R.layout.authentication);
+      DrupoidSetAuthLayout();
     }
   }
 }
