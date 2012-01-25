@@ -81,8 +81,7 @@ public class DrupoidActivity extends Activity {
    */
   public boolean onCreateOptionsMenu(Menu menu) {
     if (Common.drupoidAuthenticated) {
-      // @todo find nicer button.
-      menu.add(Menu.NONE, 0, 0, getString(R.string.logout)).setIcon(android.R.drawable.button_onoff_indicator_off);
+      menu.add(Menu.NONE, 0, 0, getString(R.string.logout)).setIcon(android.R.drawable.ic_lock_power_off);
       return super.onCreateOptionsMenu(menu);
     }
 
@@ -238,7 +237,7 @@ public class DrupoidActivity extends Activity {
   public void DrupoidNoConnection() {
     AlertDialog alertDialog = new AlertDialog.Builder(DrupoidActivity.this).create();
     // @todo can we uberhaupt set an icon?
-    alertDialog.setIcon(android.R.drawable.alert_dark_frame);
+    alertDialog.setIcon(android.R.drawable.ic_dialog_info);
     alertDialog.setMessage(getString(R.string.no_connection));
     alertDialog.setButton(getString(R.string.close), new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int which) {
