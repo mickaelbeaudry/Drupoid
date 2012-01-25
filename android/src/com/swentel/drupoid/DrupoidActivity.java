@@ -114,6 +114,19 @@ public class DrupoidActivity extends Activity {
   }
 
   /**
+   * Get path of image.
+   */
+  public String getPath(Uri uri) {
+    String[] projection = {
+      MediaStore.Images.Media.DATA
+    };
+    Cursor cursor = managedQuery(uri, projection, null, null, null);
+    int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+    cursor.moveToFirst();
+    return cursor.getString(column_index);
+  }
+
+  /**
    * OnClickListener on select button.
    */
   private final View.OnClickListener onSelectPress = new View.OnClickListener() {
@@ -122,6 +135,58 @@ public class DrupoidActivity extends Activity {
       intent.setType("image/*");
       intent.setAction(Intent.ACTION_GET_CONTENT);
       startActivityForResult(Intent.createChooser(intent, getString(R.string.picture_select)), SELECT_PICTURE);
+    }
+  };
+
+  /**
+   * OnClickListener on upload button.
+   */
+  private final View.OnClickListener onUploadPress = new View.OnClickListener() {
+    public void onClick(View v) {
+
+      if (!DrupoidIsOnline()) {
+        DrupoidNoConnection();
+        return;
+      }
+
+      EditText title = (EditText) findViewById(R.id.title);
+      if (title.getText().toString().length() > 0 && selectedImagePath.toString().length() > 0) {
+        image_title = title.getText().toString();
+        dialog = ProgressDialog.show(DrupoidActivity.this, getString(R.string.uploading), getString(R.string.please_wait), true);
+        new DrupoidUploadTask().execute();
+      }
+      else {
+        Toast.makeText(getBaseContext(), R.string.missing_data, Toast.LENGTH_LONG).show();
+      }
+    }
+  };
+
+  /**
+   * OnClickListener on login button.
+   */
+  private final View.OnClickListener onLoginPress = new View.OnClickListener() {
+    public void onClick(View v) {
+
+      if (!DrupoidIsOnline()) {
+        DrupoidNoConnection();
+        return;
+      }
+
+      EditText drupoid_username = (EditText) findViewById(R.id.drupoid_username);
+      EditText drupoid_password = (EditText) findViewById(R.id.drupoid_password);
+      EditText drupoid_url = (EditText) findViewById(R.id.drupoid_url);
+      drupoidUser = drupoid_username.getText().toString();
+      drupoidPass = drupoid_password.getText().toString();
+      drupoidEndpoint = drupoid_url.getText().toString();
+
+      if (drupoidUser.length() > 0 && drupoidPass.length() > 0 && drupoidEndpoint.length() > 0) {
+        Common.setPref(getBaseContext(), "drupoidEndpoint", drupoidEndpoint);
+        dialog = ProgressDialog.show(DrupoidActivity.this, getString(R.string.authenticating), getString(R.string.please_wait), true);
+        new DrupoidAuthTask().execute();
+      }
+      else {
+        Toast.makeText(getBaseContext(), R.string.missing_cred, Toast.LENGTH_LONG).show();
+      }
     }
   };
 
@@ -138,35 +203,6 @@ public class DrupoidActivity extends Activity {
   }
 
   /**
-   * OnClickListener on upload button.
-   */
-  private final View.OnClickListener onUploadPress = new View.OnClickListener() {
-    public void onClick(View v) {
-      if (!DrupoidIsOnline()) {
-        AlertDialog alertDialog = new AlertDialog.Builder(DrupoidActivity.this).create();
-        alertDialog.setMessage(getString(R.string.no_connection));
-        alertDialog.setButton(getString(R.string.close), new DialogInterface.OnClickListener() {
-          public void onClick(DialogInterface dialog, int which) {
-            dialog.cancel();
-          }
-        });
-        alertDialog.show();
-      }
-      else {
-        EditText title = (EditText) findViewById(R.id.title);
-        if (title.getText().toString().length() > 0 && selectedImagePath.toString().length() > 0) {
-          image_title = title.getText().toString();
-          dialog = ProgressDialog.show(DrupoidActivity.this, getString(R.string.uploading), getString(R.string.please_wait), true);
-          new DrupoidUploadTask().execute();
-        }
-        else {
-          Toast.makeText(getBaseContext(), R.string.missing_data, Toast.LENGTH_LONG).show();
-        }
-      }
-    }
-  };
-
-  /**
    * Check if we are connected.
    */
   public boolean DrupoidIsOnline() {
@@ -176,6 +212,20 @@ public class DrupoidActivity extends Activity {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Show dialog.
+   */
+  public void DrupoidNoConnection() {
+    AlertDialog alertDialog = new AlertDialog.Builder(DrupoidActivity.this).create();
+    alertDialog.setMessage(getString(R.string.no_connection));
+    alertDialog.setButton(getString(R.string.close), new DialogInterface.OnClickListener() {
+      public void onClick(DialogInterface dialog, int which) {
+        dialog.cancel();
+      }
+    });
+    alertDialog.show();
   }
 
   /**
@@ -203,7 +253,7 @@ public class DrupoidActivity extends Activity {
   /**
    * Calculate size of preview.
    */
-  private Bitmap DrupoidCalculateSize(String selectedImagePath, int maxSize) {
+  public Bitmap DrupoidCalculateSize(String selectedImagePath, int maxSize) {
     BitmapFactory.Options opts = new BitmapFactory.Options();
     opts.inJustDecodeBounds = true;
     BitmapFactory.decodeFile(selectedImagePath, opts);
@@ -261,42 +311,6 @@ public class DrupoidActivity extends Activity {
       // setContentView(R.layout.main);
     }
   }
-
-  /**
-   * Get path of image.
-   */
-  public String getPath(Uri uri) {
-    String[] projection = {
-      MediaStore.Images.Media.DATA
-    };
-    Cursor cursor = managedQuery(uri, projection, null, null, null);
-    int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-    cursor.moveToFirst();
-    return cursor.getString(column_index);
-  }
-
-  /**
-   * OnClickListener on login button.
-   */
-  private final View.OnClickListener onLoginPress = new View.OnClickListener() {
-    public void onClick(View v) {
-      EditText drupoid_username = (EditText) findViewById(R.id.drupoid_username);
-      EditText drupoid_password = (EditText) findViewById(R.id.drupoid_password);
-      EditText drupoid_url = (EditText) findViewById(R.id.drupoid_url);
-      drupoidUser = drupoid_username.getText().toString();
-      drupoidPass = drupoid_password.getText().toString();
-      drupoidEndpoint = drupoid_url.getText().toString();
-
-      if (drupoidUser.length() > 0 && drupoidPass.length() > 0 && drupoidEndpoint.length() > 0) {
-        Common.setPref(getBaseContext(), "drupoidEndpoint", drupoidEndpoint);
-        dialog = ProgressDialog.show(DrupoidActivity.this, getString(R.string.authenticating), getString(R.string.please_wait), true);
-        new DrupoidAuthTask().execute();
-      }
-      else {
-        Toast.makeText(getBaseContext(), R.string.missing_cred, Toast.LENGTH_LONG).show();
-      }
-    }
-  };
 
   /**
    * Authentication.
