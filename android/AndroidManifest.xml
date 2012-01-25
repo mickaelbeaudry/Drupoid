@@ -24,6 +24,6 @@
                 <data android:mimeType="image/*" />
             </intent-filter>            
         </activity>
-        <activity android:name="DrupoidSettings" />
+        <activity android:name="DrupoidAuthentication" />
 	</application>
 </manifest>

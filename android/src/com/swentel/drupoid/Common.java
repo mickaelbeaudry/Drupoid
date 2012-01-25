@@ -8,8 +8,10 @@ import android.content.SharedPreferences.Editor;
  * Common class with various variables, getters, setters and helper methods.
  */
 public class Common {
+
   public static final int SEND_COOKIE = 1;
   public static final int SAVE_COOKIE = 2;
+  public static boolean drupoidAuthenticated = false;
 
   /**
    * Get a preference.
@@ -20,6 +22,7 @@ public class Common {
    *        The name of the preference
    * @param DefaultValue
    *        The default value
+   * 
    * @return The value of the preference.
    */
   public static String getPref(Context ctxt, String pref, String DefaultValue) {

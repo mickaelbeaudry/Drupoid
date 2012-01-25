@@ -104,7 +104,9 @@ public class HttpMultipartRequest {
             // @todo only session id cookie.
             String cookie = conn.getHeaderField(i);
             cookie = cookie.substring(0, cookie.indexOf(";"));
-            Common.setPref(ctxt, "drupoidCookie", cookie);
+            if (cookie.substring(0, 4).equals("SESS")) {
+              Common.setPref(ctxt, "drupoidCookie", cookie);
+            }
           }
         }
       }

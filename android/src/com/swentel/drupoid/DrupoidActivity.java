@@ -10,7 +10,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -19,7 +18,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -39,7 +37,6 @@ public class DrupoidActivity extends Activity {
   private String selectedImagePath;
   private ProgressDialog dialog;
   private final int SELECT_PICTURE = 1;
-  private SharedPreferences mPref;
   InputStream inputStream;
 
   /**
@@ -47,10 +44,22 @@ public class DrupoidActivity extends Activity {
    */
   public void onCreate(Bundle savedInstanceState) {
 
-    mPref = this.getSharedPreferences("mPref", MODE_PRIVATE);
-
     // Start main activity.
     super.onCreate(savedInstanceState);
+
+    // Verify we have a DrupoidURL and a DrupoidCookie. If not, go to
+    // the authentication screen.
+    String drupoidEndpoint = Common.getPref(getBaseContext(), "drupoidEndpoint", "");
+    String drupoidCookie = Common.getPref(getBaseContext(), "drupoidCookie", "");
+    if (drupoidEndpoint.length() == 0 || drupoidCookie.length() == 0) {
+      startActivity(new Intent(this, DrupoidAuthentication.class));
+      return;
+    }
+
+    // Authenticated.
+    Common.drupoidAuthenticated = true;
+
+    // User main layout.
     setContentView(R.layout.main);
 
     // Listen to share menu.
@@ -77,25 +86,19 @@ public class DrupoidActivity extends Activity {
    * Create options menu.
    */
   public boolean onCreateOptionsMenu(Menu menu) {
-    // @todo this shouldn't be a menu, but become a different layout.
-    // based on authentication status, we either show login layout
-    // or the app (with a logout button), for that we also need to
-    // convert the response from the server into a json object
-    // so we can return with a 'status' and 'result' key in the
-    // the json.
-    menu.add(Menu.NONE, 0, 0, getString(R.string.settings)).setIcon(android.R.drawable.ic_menu_preferences);
-    return super.onCreateOptionsMenu(menu);
+    if (Common.drupoidAuthenticated) {
+      menu.add(Menu.NONE, 0, 0, getString(R.string.logout)).setIcon(android.R.drawable.star_big_on);
+      return super.onCreateOptionsMenu(menu);
+    }
+
+    return false;
   }
 
   /**
    * Menu selection.
    */
   public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId()) {
-    case 0:
-      startActivity(new Intent(this, DrupoidSettings.class));
-      return true;
-    }
+    // @todo logging out.
     return false;
   }
 
@@ -128,7 +131,6 @@ public class DrupoidActivity extends Activity {
    */
   private final View.OnClickListener onUploadPress = new View.OnClickListener() {
     public void onClick(View v) {
-
       if (!DrupoidIsOnline()) {
         AlertDialog alertDialog = new AlertDialog.Builder(DrupoidActivity.this).create();
         alertDialog.setMessage(getString(R.string.no_connection));
@@ -156,16 +158,13 @@ public class DrupoidActivity extends Activity {
   /**
    * Check if we are connected.
    */
-  private boolean DrupoidIsOnline() {
+  public boolean DrupoidIsOnline() {
     ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
     // Test for connection
     if (cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isAvailable() && cm.getActiveNetworkInfo().isConnected()) {
       return true;
     }
-    else {
-      Log.v("Debug", "Internet Connection Not Present");
-      return false;
-    }
+    return false;
   }
 
   /**
@@ -216,8 +215,8 @@ public class DrupoidActivity extends Activity {
     protected String doInBackground(Void... unused) {
       String sResponse = "";
 
-      // Get settings.
-      String durl = mPref.getString("drupoid_url", "drupoid_url");
+      // Get endpoint.
+      String drupoidEndpoint = Common.getPref(getBaseContext(), "drupoidEndpoint", "");
 
       // Parameters to send through.
       HashMap<String, String> Params = new HashMap<String, String>();
@@ -226,7 +225,7 @@ public class DrupoidActivity extends Activity {
 
       // Perform request.
       try {
-        sResponse = HttpMultipartRequest.execute(getBaseContext(), durl, Params, Common.SEND_COOKIE, selectedImagePath, "image");
+        sResponse = HttpMultipartRequest.execute(getBaseContext(), drupoidEndpoint, Params, Common.SEND_COOKIE, selectedImagePath, "image");
       }
       catch (IOException e) {
       }
@@ -246,6 +245,7 @@ public class DrupoidActivity extends Activity {
       title.setText("");
       ImageView imageView = (ImageView) findViewById(R.id.image_preview);
       imageView.setImageResource(R.drawable.insert_image);
+      // @todo in case the result is no auth - go to login screen.
     }
   }
 

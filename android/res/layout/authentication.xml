@@ -10,7 +10,7 @@
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:layout_marginTop="10dp"
-        android:text="@string/preferences" />
+        android:text="@string/sign_in" />
     
     <EditText
         android:id="@+id/drupoid_url"
@@ -41,12 +41,12 @@
         android:hint="@string/drupoid_password" />
 
     <Button
-        android:id="@+id/save_preferences"
+        android:id="@+id/login"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:layout_marginTop="10dp"
-        android:text="@string/save_preferences" />
+        android:text="@string/login" />
     
 </LinearLayout>

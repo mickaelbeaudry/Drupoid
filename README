@@ -6,6 +6,9 @@ Example Drupal module able to save a title and image coming from
 an Android application. The source for this module and the application 
 can be found at http://github.com/swentel/Drupoid
 
+Blog post: http://realize.be/posting-images-android-drupal
+Screenshots: http://realize.be/mobile
+
 Drupal content type
 -------------------
 
