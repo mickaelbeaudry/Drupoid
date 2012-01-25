@@ -7,6 +7,7 @@
     <string name="picture_select">Select picture</string>
     <string name="image_preview">Image preview</string>
     <string name="uploading">Uploading</string>
+    <string name="error_upload">There was an error with the upload, try again later.</string>
     <string name="please_wait">Please wait …</string>
     <string name="sign_in">Sign in with your account:</string>
     <string name="drupoid_url">http://example.com/drupoid</string>
@@ -19,5 +20,4 @@
     <string name="missing_cred">Please enter all credentials.</string>
     <string name="no_connection">No internet connection.</string>
     <string name="close">Close</string>
-    <string name="error_upload">There was an error with the upload, try again later.</string>
 </resources>

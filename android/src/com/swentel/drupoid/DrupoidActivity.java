@@ -38,6 +38,9 @@ public class DrupoidActivity extends Activity {
   private ProgressDialog dialog;
   private final int SELECT_PICTURE = 1;
   InputStream inputStream;
+  String drupoidUser = "";
+  String drupoidPass = "";
+  String drupoidEndpoint = "";
 
   /**
    * Main onCreate.
@@ -52,34 +55,42 @@ public class DrupoidActivity extends Activity {
     String drupoidEndpoint = Common.getPref(getBaseContext(), "drupoidEndpoint", "");
     String drupoidCookie = Common.getPref(getBaseContext(), "drupoidCookie", "");
     if (drupoidEndpoint.length() == 0 || drupoidCookie.length() == 0) {
-      startActivity(new Intent(this, DrupoidAuthentication.class));
-      return;
+      setContentView(R.layout.authentication);
+
+      // Set endpoint if available.
+      EditText drupoid_url = (EditText) findViewById(R.id.drupoid_url);
+      drupoid_url.setText(Common.getPref(getBaseContext(), "drupoidEndpoint", ""));
+
+      // Add listener on login button.
+      Button login = (Button) findViewById(R.id.login);
+      login.setOnClickListener(onLoginPress);
     }
+    else {
+      // Authenticated.
+      Common.drupoidAuthenticated = true;
 
-    // Authenticated.
-    Common.drupoidAuthenticated = true;
+      // User main layout.
+      setContentView(R.layout.main);
 
-    // User main layout.
-    setContentView(R.layout.main);
-
-    // Listen to share menu.
-    Intent intent = getIntent();
-    Bundle extras = intent.getExtras();
-    String action = intent.getAction();
-    if (Intent.ACTION_SEND.equals(action)) {
-      if (extras.containsKey(Intent.EXTRA_STREAM)) {
-        Uri selectedImageUri = (Uri) extras.getParcelable(Intent.EXTRA_STREAM);
-        DrupoidSetPreview(selectedImageUri);
+      // Listen to share menu.
+      Intent intent = getIntent();
+      Bundle extras = intent.getExtras();
+      String action = intent.getAction();
+      if (Intent.ACTION_SEND.equals(action)) {
+        if (extras.containsKey(Intent.EXTRA_STREAM)) {
+          Uri selectedImageUri = (Uri) extras.getParcelable(Intent.EXTRA_STREAM);
+          DrupoidSetPreview(selectedImageUri);
+        }
       }
+
+      // Add listener on image preview.
+      imgView = (ImageView) findViewById(R.id.image_preview);
+      imgView.setOnClickListener(onSelectPress);
+
+      // Add listener on upload button.
+      Button upload = (Button) findViewById(R.id.upload_button);
+      upload.setOnClickListener(onUploadPress);
     }
-
-    // Add listener on image preview.
-    imgView = (ImageView) findViewById(R.id.image_preview);
-    imgView.setOnClickListener(onSelectPress);
-
-    // Add listener on upload button.
-    Button upload = (Button) findViewById(R.id.upload_button);
-    upload.setOnClickListener(onUploadPress);
   }
 
   /**
@@ -246,6 +257,8 @@ public class DrupoidActivity extends Activity {
       ImageView imageView = (ImageView) findViewById(R.id.image_preview);
       imageView.setImageResource(R.drawable.insert_image);
       // @todo in case the result is no auth - go to login screen.
+      // Common.drupoidAuthenticated = false;
+      // setContentView(R.layout.main);
     }
   }
 
@@ -260,5 +273,63 @@ public class DrupoidActivity extends Activity {
     int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
     cursor.moveToFirst();
     return cursor.getString(column_index);
+  }
+
+  /**
+   * OnClickListener on login button.
+   */
+  private final View.OnClickListener onLoginPress = new View.OnClickListener() {
+    public void onClick(View v) {
+      EditText drupoid_username = (EditText) findViewById(R.id.drupoid_username);
+      EditText drupoid_password = (EditText) findViewById(R.id.drupoid_password);
+      EditText drupoid_url = (EditText) findViewById(R.id.drupoid_url);
+      drupoidUser = drupoid_username.getText().toString();
+      drupoidPass = drupoid_password.getText().toString();
+      drupoidEndpoint = drupoid_url.getText().toString();
+
+      if (drupoidUser.length() > 0 && drupoidPass.length() > 0 && drupoidEndpoint.length() > 0) {
+        Common.setPref(getBaseContext(), "drupoidEndpoint", drupoidEndpoint);
+        dialog = ProgressDialog.show(DrupoidActivity.this, getString(R.string.authenticating), getString(R.string.please_wait), true);
+        new DrupoidAuthTask().execute();
+      }
+      else {
+        Toast.makeText(getBaseContext(), R.string.missing_cred, Toast.LENGTH_LONG).show();
+      }
+    }
+  };
+
+  /**
+   * Authentication.
+   */
+  class DrupoidAuthTask extends AsyncTask<Void, Void, String> {
+
+    protected String doInBackground(Void... unused) {
+      String sResponse = "";
+
+      // Get endpoint.
+      String drupoidEndpoint = Common.getPref(getBaseContext(), "drupoidEndpoint", "");
+      HashMap<String, String> Params = new HashMap<String, String>();
+      Params.put("request_type", "authenticate");
+      Params.put("drupoid_username", drupoidUser);
+      Params.put("drupoid_password", drupoidPass);
+      try {
+        sResponse = HttpMultipartRequest.execute(getBaseContext(), drupoidEndpoint, Params, Common.SAVE_COOKIE, "", "");
+      }
+      catch (IOException e) {
+      }
+
+      return sResponse;
+    }
+
+    protected void onPostExecute(String sResponse) {
+      if (dialog.isShowing()) {
+        dialog.dismiss();
+      }
+      // Show message.
+      Toast.makeText(getBaseContext(), sResponse, Toast.LENGTH_LONG).show();
+      // @todo really check response.
+      Common.drupoidAuthenticated = true;
+      setContentView(R.layout.main);
+    }
   }
 }
