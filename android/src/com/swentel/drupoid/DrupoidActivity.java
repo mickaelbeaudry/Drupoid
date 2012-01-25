@@ -18,7 +18,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -230,7 +229,6 @@ public class DrupoidActivity extends Activity {
     // Set endpoint if available.
     EditText drupoid_url = (EditText) findViewById(R.id.drupoid_url);
     String drupoidEndpoint = Common.getPref(getBaseContext(), "drupoidEndpoint", "");
-    Log.d("endpoint", drupoidEndpoint);
     drupoid_url.setText(drupoidEndpoint);
   }
 
