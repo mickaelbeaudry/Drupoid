@@ -118,11 +118,6 @@ function drupapp_request() {
     drupapp_request_end(t('Invalid request type.'), FALSE);
   }
 
-  // Check if the user is authenticated.
-  if ($GLOBALS['user']->uid == 0 && $request_type != "authenticate") {
-    drupapp_request_end(t('Please sign in to upload images.'), 2);
-  }
-
   // Delegate to separate function.
   $callback = 'drupapp_service_'  . $request_type;
   $result = $callback();
@@ -237,11 +232,11 @@ function drupapp_service_logout() {
  */
 function drupapp_service_image_upload() {
 
-  // Access
+  // Access.
   if (!user_access('upload images via app')) {
     return array(
       'result' => FALSE,
-      'message' => t('User has no permission to upload images.'),
+      'message' => t('You have no permission to upload images.'),
     );
   }
 

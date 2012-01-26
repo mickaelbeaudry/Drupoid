@@ -33,8 +33,6 @@ import android.widget.Toast;
 
 /**
  * Main Activity.
- * 
- * @todo test with window rotation :)
  */
 public class DrupoidActivity extends Activity {
 
@@ -369,7 +367,7 @@ public class DrupoidActivity extends Activity {
         EditText title = (EditText) findViewById(R.id.title);
         title.setText("");
         ImageView imageView = (ImageView) findViewById(R.id.image_preview);
-        imageView.setImageResource(android.R.drawable.ic_menu_gallery);
+        imageView.setImageResource(android.R.drawable.picture_frame);
       }
       // Go to login screen.
       else if (result == Common.NO_AUTH) {

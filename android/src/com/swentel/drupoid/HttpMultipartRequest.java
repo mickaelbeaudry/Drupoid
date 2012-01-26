@@ -49,7 +49,7 @@ public class HttpMultipartRequest {
 
       // Send cookie ?
       if (cookieAction == Common.SEND_COOKIE) {
-        String drupoidCookie = Common.getPref(ctxt, "drupoidCookie", "");
+        String drupoidCookie = Common.getPref(ctxt, "drupappCookie", "");
         conn.setRequestProperty("Cookie", drupoidCookie);
       }
 
