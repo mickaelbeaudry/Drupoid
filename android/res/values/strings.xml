@@ -15,7 +15,7 @@
     <string name="drupapp_url">http://example.com/drupoid</string>
     <string name="drupapp_username">Username</string>
     <string name="drupapp_password">Password</string>
-    <string name="login">Login</string>
+    <string name="login">Sign in</string>
     <string name="logout">Logout</string>
     <string name="authenticating">Authenticating</string>
     <string name="logging_out">Signing off</string>
