@@ -44,9 +44,9 @@ public class DrupoidActivity extends Activity {
   private ProgressDialog dialog;
   private final int SELECT_PICTURE = 1;
   InputStream inputStream;
-  String drupoidUser = "";
-  String drupoidPass = "";
-  String drupoidEndpoint = "";
+  String drupappUser = "";
+  String drupappPass = "";
+  String drupappEndpoint = "";
 
   /**
    * Main onCreate.
@@ -56,19 +56,19 @@ public class DrupoidActivity extends Activity {
     // Start main activity.
     super.onCreate(savedInstanceState);
 
-    // Verify we have a DrupoidURL and a DrupoidCookie. If not, go to
+    // Verify we have a drupappURL and a drupappCookie. If not, go to
     // the authentication screen.
-    String drupoidEndpoint = Common.getPref(getBaseContext(), "drupoidEndpoint", "");
-    String drupoidCookie = Common.getPref(getBaseContext(), "drupoidCookie", "");
-    if (drupoidEndpoint.length() == 0 || drupoidCookie.length() == 0) {
-      DrupoidSetAuthLayout();
+    String drupappEndpoint = Common.getPref(getBaseContext(), "drupappEndpoint", "");
+    String drupappCookie = Common.getPref(getBaseContext(), "drupappCookie", "");
+    if (drupappEndpoint.length() == 0 || drupappCookie.length() == 0) {
+      drupappSetAuthLayout();
     }
     else {
       // Authenticated.
-      Common.drupoidAuthenticated = true;
+      Common.drupappAuthenticated = true;
 
       // Set upload layout.
-      DrupoidSetUploadLayout();
+      drupappSetUploadLayout();
 
       // Listen to share menu.
       Intent intent = getIntent();
@@ -77,7 +77,7 @@ public class DrupoidActivity extends Activity {
       if (Intent.ACTION_SEND.equals(action)) {
         if (extras.containsKey(Intent.EXTRA_STREAM)) {
           Uri selectedImageUri = (Uri) extras.getParcelable(Intent.EXTRA_STREAM);
-          DrupoidSetPreview(selectedImageUri);
+          drupappSetPreview(selectedImageUri);
         }
       }
     }
@@ -87,7 +87,7 @@ public class DrupoidActivity extends Activity {
    * Create options menu.
    */
   public boolean onCreateOptionsMenu(Menu menu) {
-    if (Common.drupoidAuthenticated) {
+    if (Common.drupappAuthenticated) {
       menu.add(Menu.NONE, 0, 0, getString(R.string.logout)).setIcon(android.R.drawable.ic_lock_power_off);
       return super.onCreateOptionsMenu(menu);
     }
@@ -99,13 +99,13 @@ public class DrupoidActivity extends Activity {
    * Menu selection.
    */
   public boolean onOptionsItemSelected(MenuItem item) {
-    if (!DrupoidIsOnline()) {
-      DrupoidDialog(getString(R.string.no_connection), getString(R.string.check_internet_settings));
+    if (!drupappIsOnline()) {
+      drupappDialog(getString(R.string.no_connection), getString(R.string.check_internet_settings));
       return false;
     }
 
     dialog = ProgressDialog.show(DrupoidActivity.this, getString(R.string.logging_out), getString(R.string.please_wait), true);
-    new DrupoidLogoutTask().execute();
+    new drupappLogoutTask().execute();
 
     return true;
   }
@@ -141,8 +141,8 @@ public class DrupoidActivity extends Activity {
   private final View.OnClickListener onUploadPress = new View.OnClickListener() {
     public void onClick(View v) {
 
-      if (!DrupoidIsOnline()) {
-        DrupoidDialog(getString(R.string.no_connection), getString(R.string.check_internet_settings));
+      if (!drupappIsOnline()) {
+        drupappDialog(getString(R.string.no_connection), getString(R.string.check_internet_settings));
         return;
       }
 
@@ -150,10 +150,10 @@ public class DrupoidActivity extends Activity {
       if (title.getText().toString().length() > 0 && selectedImagePath.toString().length() > 0) {
         image_title = title.getText().toString();
         dialog = ProgressDialog.show(DrupoidActivity.this, getString(R.string.uploading), getString(R.string.please_wait), true);
-        new DrupoidUploadTask().execute();
+        new drupappUploadTask().execute();
       }
       else {
-        DrupoidDialog(getString(R.string.warning), getString(R.string.missing_data));
+        drupappDialog(getString(R.string.warning), getString(R.string.missing_data));
       }
     }
   };
@@ -164,25 +164,25 @@ public class DrupoidActivity extends Activity {
   private final View.OnClickListener onLoginPress = new View.OnClickListener() {
     public void onClick(View v) {
 
-      if (!DrupoidIsOnline()) {
-        DrupoidDialog(getString(R.string.no_connection), getString(R.string.check_internet_settings));
+      if (!drupappIsOnline()) {
+        drupappDialog(getString(R.string.no_connection), getString(R.string.check_internet_settings));
         return;
       }
 
-      EditText drupoid_username = (EditText) findViewById(R.id.drupoid_username);
-      EditText drupoid_password = (EditText) findViewById(R.id.drupoid_password);
-      EditText drupoid_url = (EditText) findViewById(R.id.drupoid_url);
-      drupoidUser = drupoid_username.getText().toString();
-      drupoidPass = drupoid_password.getText().toString();
-      drupoidEndpoint = drupoid_url.getText().toString();
+      EditText drupapp_username = (EditText) findViewById(R.id.drupapp_username);
+      EditText drupapp_password = (EditText) findViewById(R.id.drupapp_password);
+      EditText drupapp_url = (EditText) findViewById(R.id.drupapp_url);
+      drupappUser = drupapp_username.getText().toString();
+      drupappPass = drupapp_password.getText().toString();
+      drupappEndpoint = drupapp_url.getText().toString();
 
-      if (drupoidUser.length() > 0 && drupoidPass.length() > 0 && drupoidEndpoint.length() > 0) {
-        Common.setPref(getBaseContext(), "drupoidEndpoint", drupoidEndpoint);
+      if (drupappUser.length() > 0 && drupappPass.length() > 0 && drupappEndpoint.length() > 0) {
+        Common.setPref(getBaseContext(), "drupappEndpoint", drupappEndpoint);
         dialog = ProgressDialog.show(DrupoidActivity.this, getString(R.string.authenticating), getString(R.string.please_wait), true);
-        new DrupoidLoginTask().execute();
+        new drupappLoginTask().execute();
       }
       else {
-        DrupoidDialog(getString(R.string.warning), getString(R.string.missing_cred));
+        drupappDialog(getString(R.string.warning), getString(R.string.missing_cred));
       }
     }
   };
@@ -194,7 +194,7 @@ public class DrupoidActivity extends Activity {
     if (resultCode == RESULT_OK) {
       if (requestCode == SELECT_PICTURE) {
         Uri selectedImageUri = data.getData();
-        DrupoidSetPreview(selectedImageUri);
+        drupappSetPreview(selectedImageUri);
       }
     }
   }
@@ -202,7 +202,7 @@ public class DrupoidActivity extends Activity {
   /**
    * Parse response into JSON object.
    */
-  public void DrupoidParseResponse(String sResponse) {
+  public void drupappParseResponse(String sResponse) {
     try {
       JSONObject jObject = new JSONObject(sResponse);
       result = jObject.getInt("result");
@@ -210,18 +210,18 @@ public class DrupoidActivity extends Activity {
     }
     catch (JSONException e1) {
       result = Common.JSON_PARSE_ERROR;
-      DrupoidDialog(getString(R.string.warning), getString(R.string.parse_json_error));
+      drupappDialog(getString(R.string.warning), getString(R.string.parse_json_error));
     }
     catch (ParseException e1) {
       result = Common.SERVER_PARSE_ERROR;
-      DrupoidDialog(getString(R.string.warning), getString(R.string.parse_server_error));
+      drupappDialog(getString(R.string.warning), getString(R.string.parse_server_error));
     }
   }
 
   /**
    * Check if we are connected.
    */
-  public boolean DrupoidIsOnline() {
+  public boolean drupappIsOnline() {
     ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
     // Test for connection
     if (cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isAvailable() && cm.getActiveNetworkInfo().isConnected()) {
@@ -233,36 +233,36 @@ public class DrupoidActivity extends Activity {
   /**
    * Set upload layout and add listeners.
    */
-  public void DrupoidSetUploadLayout() {
+  public void drupappSetUploadLayout() {
     setContentView(R.layout.main);
 
     Button upload = (Button) findViewById(R.id.upload_button);
     upload.setOnClickListener(onUploadPress);
     ImageView imgView = (ImageView) findViewById(R.id.image_preview);
     imgView.setOnClickListener(onSelectPress);
-    DrupoidCloseKeyboard();
+    drupappCloseKeyboard();
   }
 
   /**
    * Set the login layout and listeners.
    */
-  public void DrupoidSetAuthLayout() {
+  public void drupappSetAuthLayout() {
     setContentView(R.layout.authentication);
 
     Button login = (Button) findViewById(R.id.login);
     login.setOnClickListener(onLoginPress);
 
     // Set endpoint if available.
-    EditText drupoid_url = (EditText) findViewById(R.id.drupoid_url);
-    String drupoidEndpoint = Common.getPref(getBaseContext(), "drupoidEndpoint", "");
-    drupoid_url.setText(drupoidEndpoint);
-    DrupoidCloseKeyboard();
+    EditText drupapp_url = (EditText) findViewById(R.id.drupapp_url);
+    String drupappEndpoint = Common.getPref(getBaseContext(), "drupappEndpoint", "");
+    drupapp_url.setText(drupappEndpoint);
+    drupappCloseKeyboard();
   }
 
   /**
    * Close keyboard
    */
-  public void DrupoidCloseKeyboard() {
+  public void drupappCloseKeyboard() {
     InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
     imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
   }
@@ -270,7 +270,7 @@ public class DrupoidActivity extends Activity {
   /**
    * Show dialog.
    */
-  public void DrupoidDialog(String title, CharSequence message) {
+  public void drupappDialog(String title, CharSequence message) {
     AlertDialog alertDialog = new AlertDialog.Builder(DrupoidActivity.this).create();
     alertDialog.setIcon(android.R.drawable.ic_dialog_alert);
     alertDialog.setTitle(title);
@@ -286,7 +286,7 @@ public class DrupoidActivity extends Activity {
   /**
    * Set preview in the imageView.
    */
-  public void DrupoidSetPreview(Uri selectedImageUri) {
+  public void drupappSetPreview(Uri selectedImageUri) {
 
     // The selected image can either come from the Image gallery
     // or from the File manager.
@@ -300,7 +300,7 @@ public class DrupoidActivity extends Activity {
     }
 
     // Create preview.
-    bitmap = DrupoidCalculateSize(selectedImagePath, 300);
+    bitmap = drupappCalculateSize(selectedImagePath, 300);
     ImageView imageView = (ImageView) findViewById(R.id.image_preview);
     imageView.setImageBitmap(bitmap);
   }
@@ -308,7 +308,7 @@ public class DrupoidActivity extends Activity {
   /**
    * Calculate size of preview.
    */
-  public Bitmap DrupoidCalculateSize(String selectedImagePath, int maxSize) {
+  public Bitmap drupappCalculateSize(String selectedImagePath, int maxSize) {
     BitmapFactory.Options opts = new BitmapFactory.Options();
     opts.inJustDecodeBounds = true;
     BitmapFactory.decodeFile(selectedImagePath, opts);
@@ -326,13 +326,13 @@ public class DrupoidActivity extends Activity {
   /**
    * Upload task.
    */
-  class DrupoidUploadTask extends AsyncTask<Void, Void, String> {
+  class drupappUploadTask extends AsyncTask<Void, Void, String> {
 
     protected String doInBackground(Void... unused) {
       String sResponse = "";
 
       // Get endpoint.
-      String drupoidEndpoint = Common.getPref(getBaseContext(), "drupoidEndpoint", "");
+      String drupappEndpoint = Common.getPref(getBaseContext(), "drupappEndpoint", "");
 
       // Parameters to send through.
       HashMap<String, String> Params = new HashMap<String, String>();
@@ -341,7 +341,7 @@ public class DrupoidActivity extends Activity {
 
       // Perform request.
       try {
-        sResponse = HttpMultipartRequest.execute(getBaseContext(), drupoidEndpoint, Params, Common.SEND_COOKIE, selectedImagePath, "image");
+        sResponse = HttpMultipartRequest.execute(getBaseContext(), drupappEndpoint, Params, Common.SEND_COOKIE, selectedImagePath, "image");
       }
       catch (IOException e) {
       }
@@ -357,7 +357,7 @@ public class DrupoidActivity extends Activity {
       }
 
       // Parse response.
-      DrupoidParseResponse(sResponse);
+      drupappParseResponse(sResponse);
 
       // Show message and reset application.
       if (result == Common.SUCCESS) {
@@ -371,13 +371,13 @@ public class DrupoidActivity extends Activity {
       }
       // Go to login screen.
       else if (result == Common.NO_AUTH) {
-        Common.drupoidAuthenticated = false;
+        Common.drupappAuthenticated = false;
         Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
-        DrupoidSetAuthLayout();
+        drupappSetAuthLayout();
       }
       // Show warning.
       else if (result < Common.JSON_PARSE_ERROR) {
-        DrupoidDialog(getString(R.string.warning), message);
+        drupappDialog(getString(R.string.warning), message);
       }
     }
   }
@@ -385,19 +385,19 @@ public class DrupoidActivity extends Activity {
   /**
    * Login task.
    */
-  class DrupoidLoginTask extends AsyncTask<Void, Void, String> {
+  class drupappLoginTask extends AsyncTask<Void, Void, String> {
 
     protected String doInBackground(Void... unused) {
       String sResponse = "";
 
       // Get endpoint.
-      String drupoidEndpoint = Common.getPref(getBaseContext(), "drupoidEndpoint", "");
+      String drupappEndpoint = Common.getPref(getBaseContext(), "drupappEndpoint", "");
       HashMap<String, String> Params = new HashMap<String, String>();
       Params.put("request_type", "authenticate");
-      Params.put("drupoid_username", drupoidUser);
-      Params.put("drupoid_password", drupoidPass);
+      Params.put("drupapp_username", drupappUser);
+      Params.put("drupapp_password", drupappPass);
       try {
-        sResponse = HttpMultipartRequest.execute(getBaseContext(), drupoidEndpoint, Params, Common.SAVE_COOKIE, "", "");
+        sResponse = HttpMultipartRequest.execute(getBaseContext(), drupappEndpoint, Params, Common.SAVE_COOKIE, "", "");
       }
       catch (IOException e) {
       }
@@ -413,15 +413,15 @@ public class DrupoidActivity extends Activity {
       }
 
       // Parse response.
-      DrupoidParseResponse(sResponse);
+      drupappParseResponse(sResponse);
 
       if (result == Common.SUCCESS) {
-        Common.drupoidAuthenticated = true;
+        Common.drupappAuthenticated = true;
         Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
-        DrupoidSetUploadLayout();
+        drupappSetUploadLayout();
       }
       else if (result < Common.JSON_PARSE_ERROR) {
-        DrupoidDialog(getString(R.string.warning), message);
+        drupappDialog(getString(R.string.warning), message);
       }
     }
   }
@@ -429,20 +429,20 @@ public class DrupoidActivity extends Activity {
   /**
    * Logout task.
    */
-  class DrupoidLogoutTask extends AsyncTask<Void, Void, String> {
+  class drupappLogoutTask extends AsyncTask<Void, Void, String> {
 
     protected String doInBackground(Void... unused) {
       String sResponse = "";
 
       // Get endpoint.
-      String drupoidEndpoint = Common.getPref(getBaseContext(), "drupoidEndpoint", "");
+      String drupappEndpoint = Common.getPref(getBaseContext(), "drupappEndpoint", "");
 
       // Parameters to send through.
       HashMap<String, String> Params = new HashMap<String, String>();
       Params.put("request_type", "logout");
       // Perform request.
       try {
-        sResponse = HttpMultipartRequest.execute(getBaseContext(), drupoidEndpoint, Params, Common.SEND_COOKIE, "", "");
+        sResponse = HttpMultipartRequest.execute(getBaseContext(), drupappEndpoint, Params, Common.SEND_COOKIE, "", "");
       }
       catch (IOException e) {
       }
@@ -458,17 +458,17 @@ public class DrupoidActivity extends Activity {
       }
 
       // Parse response.
-      DrupoidParseResponse(sResponse);
+      drupappParseResponse(sResponse);
 
       // Show message and go to login screen.
       if (result == 1) {
         Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
-        Common.delPref(getBaseContext(), "drupoidCookie");
-        Common.drupoidAuthenticated = false;
-        DrupoidSetAuthLayout();
+        Common.delPref(getBaseContext(), "drupappCookie");
+        Common.drupappAuthenticated = false;
+        drupappSetAuthLayout();
       }
       else {
-        DrupoidDialog(getString(R.string.warning), message);
+        drupappDialog(getString(R.string.warning), message);
       }
     }
   }

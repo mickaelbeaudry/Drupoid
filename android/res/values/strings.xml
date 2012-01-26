@@ -12,9 +12,9 @@
     <string name="error_upload">There was an error with the upload, try again later.</string>
     <string name="please_wait">Please wait …</string>
     <string name="sign_in">Sign in with your account:</string>
-    <string name="drupoid_url">http://example.com/drupoid</string>
-    <string name="drupoid_username">Username</string>
-    <string name="drupoid_password">Password</string>
+    <string name="drupapp_url">http://example.com/drupoid</string>
+    <string name="drupapp_username">Username</string>
+    <string name="drupapp_password">Password</string>
     <string name="login">Login</string>
     <string name="logout">Logout</string>
     <string name="authenticating">Authenticating</string>

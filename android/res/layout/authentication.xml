@@ -13,32 +13,32 @@
         android:text="@string/sign_in" />
     
     <EditText
-        android:id="@+id/drupoid_url"
+        android:id="@+id/drupapp_url"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp" 
-        android:hint="@string/drupoid_url"
+        android:hint="@string/drupapp_url"
         android:inputType="text" />
 	<requestFocus />
 	
     <EditText
-        android:id="@+id/drupoid_username"
+        android:id="@+id/drupapp_username"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:inputType="text"
-        android:hint="@string/drupoid_username" />
+        android:hint="@string/drupapp_username" />
 
     <EditText
-        android:id="@+id/drupoid_password"
+        android:id="@+id/drupapp_password"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:inputType="textPassword"
-        android:hint="@string/drupoid_password" />
+        android:hint="@string/drupapp_password" />
 
     <Button
         android:id="@+id/login"

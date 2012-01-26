@@ -16,7 +16,7 @@ public class Common {
   public static final int NO_AUTH = 2;
   public static final int JSON_PARSE_ERROR = 3;
   public static final int SERVER_PARSE_ERROR = 4;
-  public static boolean drupoidAuthenticated = false;
+  public static boolean drupappAuthenticated = false;
 
   /**
    * Get a preference.
