@@ -114,9 +114,7 @@ public class DrupoidActivity extends Activity {
    * Get path of image.
    */
   public String getPath(Uri uri) {
-    String[] projection = {
-      MediaStore.Images.Media.DATA
-    };
+    String[] projection = { MediaStore.Images.Media.DATA };
     Cursor cursor = managedQuery(uri, projection, null, null, null);
     int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
     cursor.moveToFirst();
