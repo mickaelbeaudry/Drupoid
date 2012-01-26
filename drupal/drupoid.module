@@ -115,18 +115,18 @@ function drupoid_request() {
   // Determine request type.
   $request_type = drupoid_request_type();
   if (!$request_type) {
-    drupoid_request_end(t('Invalid request type.'), WATCHDOG_WARNING);
+    drupoid_request_end(t('Invalid request type.'), FALSE);
   }
 
   // Check if the user is authenticated.
   if ($GLOBALS['user']->uid == 0 && $request_type != "authenticate") {
-    drupoid_request_end(t('Please sign in to upload images.'), WATCHDOG_WARNING);
+    drupoid_request_end(t('Please sign in to upload images.'), 2);
   }
 
   // Delegate to separate function.
   $callback = 'drupoid_service_'  . $request_type;
   $result = $callback();
-  drupoid_request_end($result['toast'], $result['severity']);
+  drupoid_request_end($result['message'], $result['result']);
 }
 
 /**
@@ -146,19 +146,30 @@ function drupoid_request_type() {
 /**
  * End the Drupoid request.
  *
- * @param $toast
+ * @param $message
  *   A string to send back to the application and log to watchdog.
- * @param $severity
- *   A watchdog constant.
+ * @param $result
+ *   Whether the request was resultfull or not.
  */
-function drupoid_request_end($toast, $severity) {
+function drupoid_request_end($message, $result) {
+
   // Ignore devel.
   $GLOBALS['devel_shutdown'] = FALSE;
-  // Commit the user session, if needed.
+
+  // Write session.
   drupal_session_commit();
+
   // Write watchdog and print result.
-  watchdog('drupoid', $toast, array(), $severity);
-  print $toast;
+  $severity = ($result == 1) ? WATCHDOG_NOTICE : WATCHDOG_WARNING;
+  watchdog('drupoid', $message, array(), $severity);
+
+  // Send response back.
+  $response = array(
+    'result' => (int) $result,
+    'message' => $message,
+  );
+
+  print drupal_json_encode($response);
   exit();
 }
 
@@ -170,8 +181,8 @@ function drupoid_service_authenticate() {
   // We need 2 variables at least.
   if (!isset($_POST['drupoid_username']) || !isset($_POST['drupoid_password'])) {
     return array(
-      'toast' => t('No username or password supplied.'),
-      'severity' => WATCHDOG_WARNING
+      'message' => t('No username or password supplied.'),
+      'result' => FALSE
     );
   }
 
@@ -182,14 +193,14 @@ function drupoid_service_authenticate() {
     $user = user_load($uid);
     user_login_finalize($edit);
     return array(
-      'toast' => t('Authentication succeeded for @user', array('@user' => $_POST['drupoid_username'])),
-      'severity' => WATCHDOG_NOTICE
+      'message' => t('Authentication succeeded for @user.', array('@user' => $_POST['drupoid_username'])),
+      'result' => TRUE
     );
   }
 
   return array(
-    'toast' => t('Sorry, unrecognized username or password.'),
-    'severity' => WATCHDOG_NOTICE
+    'message' => t('Sorry, unrecognized username or password.'),
+    'result' => FALSE
   );
 }
 
@@ -209,14 +220,14 @@ function drupoid_service_logout() {
     session_destroy();
 
     return array(
-      'toast' => t('Session closed for @name.', array('@name' => $name)),
-      'severity' => WATCHDOG_NOTICE
+      'message' => t('Session closed for @name.', array('@name' => $name)),
+      'result' => TRUE
     );
   }
   else {
     return array(
-      'toast' => t('Session already closed'),
-      'severity' => WATCHDOG_NOTICE
+      'message' => t('Session already closed.'),
+      'result' => TRUE
     );
   }
 }
@@ -229,37 +240,37 @@ function drupoid_service_image_upload() {
   // Access
   if (!user_access('upload images via app')) {
     return array(
-      'severity' => WATCHDOG_NOTICE,
-      'toast' => t('User has no permission to upload images.'),
+      'result' => FALSE,
+      'message' => t('User has no permission to upload images.'),
     );
   }
 
   // Title send through ?
   if (!isset($_POST['title'])) {
     return array(
-      'severity' => WATCHDOG_NOTICE,
-      'toast' => t('No title found in request.'),
+      'result' => FALSE,
+      'message' => t('No title found in request.'),
     );
   }
 
   // Image send through ?
   if (!isset($_FILES['image']['name'])) {
     return array(
-      'severity' => WATCHDOG_NOTICE,
-      'toast' => t('No image found in request.'),
+      'result' => FALSE,
+      'message' => t('No image found in request.'),
     );
   }
 
   // Is the drupoid_image_field variable set.
   if (!variable_get('drupoid_image_field')) {
     return array(
-      'severity' => WATCHDOG_NOTICE,
-      'toast' => t('No image field set. Configure it on your Drupal installation.'),
+      'result' => FALSE,
+      'message' => t('No image field set. Configure your Drupal installation.'),
     );
   }
 
   // Basic checks are ok. Let's move on.
-  $severity = WATCHDOG_NOTICE;
+  $result = FALSE;
 
   // Try to save the node and file.
   if ($file = _drupoid_save_upload('image')) {
@@ -278,22 +289,21 @@ function drupoid_service_image_upload() {
     node_submit($node);
     node_save($node);
     if ($node->nid) {
-      $toast = t('Image has been posted.');
+      $result = TRUE;
+      $message = t('Image has been posted.');
       cache_clear_all();
     }
     else {
-      $severity = WATCHDOG_WARNING;
-      $toast = t('Error saving new node.');
+      $message = t('Error saving new node.');
     }
   }
   else {
-    $severity = WATCHDOG_WARNING;
-    $toast = t('Image file could not be saved.');
+    $message = t('Image file could not be saved.');
   }
 
   return array(
-    'severity' => $severity,
-    'toast' => $toast,
+    'result' => $result,
+    'message' => $message,
   );
 }
 

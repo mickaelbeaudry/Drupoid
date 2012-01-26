@@ -38,6 +38,7 @@ public class HttpMultipartRequest {
     FileInputStream fileInputStream = null;
     URL url = new URL(urlString);
     File file = null;
+    String sResponse = "";
 
     byte[] buffer;
     int maxBufferSize = 20 * 1024;
@@ -120,8 +121,6 @@ public class HttpMultipartRequest {
     }
 
     // Read the server response.
-    // @todo Should become JSON response, with better handling of exceptions.
-    String sResponse = "";
     try {
       dis = new DataInputStream(conn.getInputStream());
       StringBuilder response = new StringBuilder();

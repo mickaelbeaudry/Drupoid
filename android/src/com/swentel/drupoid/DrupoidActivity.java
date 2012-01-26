@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 
+import org.apache.http.ParseException;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -31,6 +35,8 @@ import android.widget.Toast;
  */
 public class DrupoidActivity extends Activity {
 
+  private int result;
+  private String message;
   private Bitmap bitmap;
   private String image_title;
   private String selectedImagePath;
@@ -93,7 +99,7 @@ public class DrupoidActivity extends Activity {
    */
   public boolean onOptionsItemSelected(MenuItem item) {
     if (!DrupoidIsOnline()) {
-      DrupoidNoConnection();
+      DrupoidDialog(getString(R.string.no_connection), getString(R.string.check_internet_settings));
       return false;
     }
 
@@ -135,7 +141,7 @@ public class DrupoidActivity extends Activity {
     public void onClick(View v) {
 
       if (!DrupoidIsOnline()) {
-        DrupoidNoConnection();
+        DrupoidDialog(getString(R.string.no_connection), getString(R.string.check_internet_settings));
         return;
       }
 
@@ -146,7 +152,7 @@ public class DrupoidActivity extends Activity {
         new DrupoidUploadTask().execute();
       }
       else {
-        Toast.makeText(getBaseContext(), R.string.missing_data, Toast.LENGTH_LONG).show();
+        DrupoidDialog(getString(R.string.warning), getString(R.string.missing_data));
       }
     }
   };
@@ -158,7 +164,7 @@ public class DrupoidActivity extends Activity {
     public void onClick(View v) {
 
       if (!DrupoidIsOnline()) {
-        DrupoidNoConnection();
+        DrupoidDialog(getString(R.string.no_connection), getString(R.string.check_internet_settings));
         return;
       }
 
@@ -172,10 +178,10 @@ public class DrupoidActivity extends Activity {
       if (drupoidUser.length() > 0 && drupoidPass.length() > 0 && drupoidEndpoint.length() > 0) {
         Common.setPref(getBaseContext(), "drupoidEndpoint", drupoidEndpoint);
         dialog = ProgressDialog.show(DrupoidActivity.this, getString(R.string.authenticating), getString(R.string.please_wait), true);
-        new DrupoidAuthTask().execute();
+        new DrupoidLoginTask().execute();
       }
       else {
-        Toast.makeText(getBaseContext(), R.string.missing_cred, Toast.LENGTH_LONG).show();
+        DrupoidDialog(getString(R.string.warning), getString(R.string.missing_cred));
       }
     }
   };
@@ -189,6 +195,25 @@ public class DrupoidActivity extends Activity {
         Uri selectedImageUri = data.getData();
         DrupoidSetPreview(selectedImageUri);
       }
+    }
+  }
+
+  /**
+   * Parse response into JSON object.
+   */
+  public void DrupoidParseResponse(String sResponse) {
+    try {
+      JSONObject jObject = new JSONObject(sResponse);
+      result = jObject.getInt("result");
+      message = jObject.getString("message");
+    }
+    catch (JSONException e1) {
+      result = Common.JSON_PARSE_ERROR;
+      DrupoidDialog(getString(R.string.warning), getString(R.string.parse_json_error));
+    }
+    catch (ParseException e1) {
+      result = Common.SERVER_PARSE_ERROR;
+      DrupoidDialog(getString(R.string.warning), getString(R.string.parse_server_error));
     }
   }
 
@@ -234,11 +259,11 @@ public class DrupoidActivity extends Activity {
   /**
    * Show dialog.
    */
-  public void DrupoidNoConnection() {
+  public void DrupoidDialog(String title, CharSequence message) {
     AlertDialog alertDialog = new AlertDialog.Builder(DrupoidActivity.this).create();
     alertDialog.setIcon(android.R.drawable.ic_dialog_alert);
-    alertDialog.setTitle(R.string.no_connection);
-    alertDialog.setMessage(getString(R.string.check_internet_settings));
+    alertDialog.setTitle(title);
+    alertDialog.setMessage(message);
     alertDialog.setButton(getString(R.string.close), new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int which) {
         dialog.cancel();
@@ -288,7 +313,7 @@ public class DrupoidActivity extends Activity {
   }
 
   /**
-   * Upload to Drupoid enabled server.
+   * Upload task.
    */
   class DrupoidUploadTask extends AsyncTask<Void, Void, String> {
 
@@ -314,27 +339,42 @@ public class DrupoidActivity extends Activity {
     }
 
     protected void onPostExecute(String sResponse) {
+
+      // Close dialog.
       if (dialog.isShowing()) {
         dialog.dismiss();
       }
+
+      // Parse response.
+      DrupoidParseResponse(sResponse);
+
       // Show message and reset application.
-      Toast.makeText(getBaseContext(), sResponse, Toast.LENGTH_LONG).show();
-      selectedImagePath = "";
-      bitmap = null;
-      EditText title = (EditText) findViewById(R.id.title);
-      title.setText("");
-      ImageView imageView = (ImageView) findViewById(R.id.image_preview);
-      imageView.setImageResource(R.drawable.insert_image);
-      // @todo in case the result is no auth - go to login screen.
-      // Common.drupoidAuthenticated = false;
-      // setContentView(R.layout.main);
+      if (result == Common.SUCCESS) {
+        Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
+        selectedImagePath = "";
+        bitmap = null;
+        EditText title = (EditText) findViewById(R.id.title);
+        title.setText("");
+        ImageView imageView = (ImageView) findViewById(R.id.image_preview);
+        imageView.setImageResource(R.drawable.insert_image);
+      }
+      // Go to login screen.
+      else if (result == Common.NO_AUTH) {
+        Common.drupoidAuthenticated = false;
+        Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
+        DrupoidSetAuthLayout();
+      }
+      // Show warning.
+      else if (result < Common.JSON_PARSE_ERROR) {
+        DrupoidDialog(getString(R.string.warning), message);
+      }
     }
   }
 
   /**
-   * Authentication.
+   * Login task.
    */
-  class DrupoidAuthTask extends AsyncTask<Void, Void, String> {
+  class DrupoidLoginTask extends AsyncTask<Void, Void, String> {
 
     protected String doInBackground(Void... unused) {
       String sResponse = "";
@@ -355,19 +395,28 @@ public class DrupoidActivity extends Activity {
     }
 
     protected void onPostExecute(String sResponse) {
+
+      // Close dialog.
       if (dialog.isShowing()) {
         dialog.dismiss();
       }
-      // Show message.
-      Toast.makeText(getBaseContext(), sResponse, Toast.LENGTH_LONG).show();
-      // @todo really check response.
-      Common.drupoidAuthenticated = true;
-      DrupoidSetUploadLayout();
+
+      // Parse response.
+      DrupoidParseResponse(sResponse);
+
+      if (result == Common.SUCCESS) {
+        Common.drupoidAuthenticated = true;
+        Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
+        DrupoidSetUploadLayout();
+      }
+      else if (result < Common.JSON_PARSE_ERROR) {
+        DrupoidDialog(getString(R.string.warning), message);
+      }
     }
   }
 
   /**
-   * Drupoid Logout.
+   * Logout task.
    */
   class DrupoidLogoutTask extends AsyncTask<Void, Void, String> {
 
@@ -391,15 +440,25 @@ public class DrupoidActivity extends Activity {
     }
 
     protected void onPostExecute(String sResponse) {
+
+      // Close dialog.
       if (dialog.isShowing()) {
         dialog.dismiss();
       }
-      // Show message and reset application.
-      Toast.makeText(getBaseContext(), sResponse, Toast.LENGTH_LONG).show();
-      // @todo make sure response is 200.
-      Common.delPref(getBaseContext(), "drupoidCookie");
-      Common.drupoidAuthenticated = false;
-      DrupoidSetAuthLayout();
+
+      // Parse response.
+      DrupoidParseResponse(sResponse);
+
+      // Show message and go to login screen.
+      if (result == 1) {
+        Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
+        Common.delPref(getBaseContext(), "drupoidCookie");
+        Common.drupoidAuthenticated = false;
+        DrupoidSetAuthLayout();
+      }
+      else {
+        DrupoidDialog(getString(R.string.warning), message);
+      }
     }
   }
 }

@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
+    <string name="parse_json_error">Could not parse the response.</string>
+    <string name="parse_server_error">Could not parse the server response. Maybe you are using the wrong endpoint, or the endpoint is down ?</string>
     <string name="title">Title</string>
     <string name="app_name">Drupoid</string>
     <string name="upload_button">Upload image</string>
-    <string name="missing_data">Please enter a title and select an image</string>
+    <string name="missing_data">Please enter a title and select an image.</string>
     <string name="picture_select">Select picture</string>
     <string name="image_preview">Image preview</string>
     <string name="uploading">Uploading</string>
-    <string name="error_upload">There was an error with the upload, try again later</string>
+    <string name="error_upload">There was an error with the upload, try again later.</string>
     <string name="please_wait">Please wait …</string>
     <string name="sign_in">Sign in with your account:</string>
     <string name="drupoid_url">http://example.com/drupoid</string>
@@ -17,8 +19,9 @@
     <string name="logout">Logout</string>
     <string name="authenticating">Authenticating</string>
     <string name="logging_out">Signing off</string>
-    <string name="missing_cred">Please enter all credentials</string>
+    <string name="warning">Warning</string>
+    <string name="missing_cred">Please enter all credentials.</string>
     <string name="no_connection">No internet connection</string>
-    <string name="check_internet_settings">Please connect your phone to the internet</string>
-    <string name="close">Close</string>
+    <string name="check_internet_settings">Please connect your phone to the internet.</string>
+    <string name="close">OK</string>
 </resources>

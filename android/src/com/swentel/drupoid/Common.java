@@ -11,6 +11,11 @@ public class Common {
 
   public static final int SEND_COOKIE = 1;
   public static final int SAVE_COOKIE = 2;
+  public static final int FAILURE = 0;
+  public static final int SUCCESS = 1;
+  public static final int NO_AUTH = 2;
+  public static final int JSON_PARSE_ERROR = 3;
+  public static final int SERVER_PARSE_ERROR = 4;
   public static boolean drupoidAuthenticated = false;
 
   /**
