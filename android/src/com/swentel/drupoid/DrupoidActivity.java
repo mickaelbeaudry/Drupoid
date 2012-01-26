@@ -25,6 +25,7 @@ import android.provider.MediaStore;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -239,6 +240,7 @@ public class DrupoidActivity extends Activity {
     upload.setOnClickListener(onUploadPress);
     ImageView imgView = (ImageView) findViewById(R.id.image_preview);
     imgView.setOnClickListener(onSelectPress);
+    DrupoidCloseKeyboard();
   }
 
   /**
@@ -254,6 +256,15 @@ public class DrupoidActivity extends Activity {
     EditText drupoid_url = (EditText) findViewById(R.id.drupoid_url);
     String drupoidEndpoint = Common.getPref(getBaseContext(), "drupoidEndpoint", "");
     drupoid_url.setText(drupoidEndpoint);
+    DrupoidCloseKeyboard();
+  }
+
+  /**
+   * Close keyboard
+   */
+  public void DrupoidCloseKeyboard() {
+    InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
+    imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
   }
 
   /**
