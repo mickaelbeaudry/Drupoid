@@ -368,6 +368,7 @@ public class DrupoidActivity extends Activity {
         title.setText("");
         ImageView imageView = (ImageView) findViewById(R.id.image_preview);
         imageView.setImageResource(android.R.drawable.picture_frame);
+        drupappCloseKeyboard();
       }
       // Go to login screen.
       else if (result == Common.NO_AUTH) {
