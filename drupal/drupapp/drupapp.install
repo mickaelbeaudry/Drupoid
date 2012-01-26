@@ -1,0 +1,16 @@
+<?php
+
+/**
+ * @file
+ * Drupapp install file.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function drupapp_uninstall() {
+  variable_del('drupapp_endpoint');
+  variable_del('drupapp_status');
+  variable_del('drupapp_image_field');
+  variable_del('drupapp_debug');
+}

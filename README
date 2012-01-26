@@ -1,9 +1,9 @@
 
-Drupoid
+Drupapp
 -------
 
 Example Drupal module able to save a title and image coming from 
-an Android application. The source for this module and the application 
+an Android or iOS application. The source for this module and the application 
 can be found at http://github.com/swentel/Drupoid
 
 Blog post: http://realize.be/posting-images-android-drupal
@@ -17,16 +17,23 @@ You can of course change this to your own needs.
 
 Drupal Installation
 -------------------
-Enable the module, give yourself the 'administer drupoid' permission
-and go to admin/config/media/drupoid where you need to configure
+Enable the module, give yourself the 'administer drupapp' permission
+and go to admin/config/media/drupapp where you need to configure
 some options like image field etc.
+
+Give roles the "upload images via app" so they can upload images.
 
 Every request is logged into watchdog - good or bad.
 
 Android
 -------
 
-The app is written against Android 2.3.3, SDK level 10.
+The app is written on Android 2.3.3, SDK level 10.
+
 After compiling, run the application and configure
 the url, username and password. The path in the url
-matches the Drupal path, eg http://example.com/drupoid
+matches the Drupal path, eg http://example.com/mobile-post
+
+iPhone
+------
+To come

@@ -1,0 +1,3 @@
+name = Drupapp
+description = "Example module able to save a title and image coming from an Android or iPhone."
+core = 7.x

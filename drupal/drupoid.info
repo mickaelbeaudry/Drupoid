@@ -1,3 +1,0 @@
-name = Drupoid
-description = "Example module able to save a title and image coming from an Android app."
-core = 7.x
