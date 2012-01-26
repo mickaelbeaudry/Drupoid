@@ -3,11 +3,11 @@
     <string name="title">Title</string>
     <string name="app_name">Drupoid</string>
     <string name="upload_button">Upload image</string>
-    <string name="missing_data">Please enter a title and select an image.</string>
+    <string name="missing_data">Please enter a title and select an image</string>
     <string name="picture_select">Select picture</string>
     <string name="image_preview">Image preview</string>
     <string name="uploading">Uploading</string>
-    <string name="error_upload">There was an error with the upload, try again later.</string>
+    <string name="error_upload">There was an error with the upload, try again later</string>
     <string name="please_wait">Please wait …</string>
     <string name="sign_in">Sign in with your account:</string>
     <string name="drupoid_url">http://example.com/drupoid</string>
@@ -15,9 +15,10 @@
     <string name="drupoid_password">Password</string>
     <string name="login">Login</string>
     <string name="logout">Logout</string>
-    <string name="authenticating">Authenticating …</string>
-    <string name="logging_out">Logging out …</string>
-    <string name="missing_cred">Please enter all credentials.</string>
-    <string name="no_connection">No internet connection.</string>
+    <string name="authenticating">Authenticating</string>
+    <string name="logging_out">Signing off</string>
+    <string name="missing_cred">Please enter all credentials</string>
+    <string name="no_connection">No internet connection</string>
+    <string name="check_internet_settings">Please connect your phone to the internet</string>
     <string name="close">Close</string>
 </resources>

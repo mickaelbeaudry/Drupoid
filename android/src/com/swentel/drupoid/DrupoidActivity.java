@@ -237,8 +237,9 @@ public class DrupoidActivity extends Activity {
   public void DrupoidNoConnection() {
     AlertDialog alertDialog = new AlertDialog.Builder(DrupoidActivity.this).create();
     // @todo can we uberhaupt set an icon?
-    alertDialog.setIcon(android.R.drawable.ic_dialog_info);
-    alertDialog.setMessage(getString(R.string.no_connection));
+    alertDialog.setIcon(android.R.drawable.ic_dialog_alert);
+    alertDialog.setTitle(R.string.no_connection);
+    alertDialog.setMessage(getString(R.string.check_internet_settings));
     alertDialog.setButton(getString(R.string.close), new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int which) {
         dialog.cancel();
