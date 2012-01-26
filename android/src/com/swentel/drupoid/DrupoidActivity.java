@@ -238,7 +238,7 @@ public class DrupoidActivity extends Activity {
 
     Button upload = (Button) findViewById(R.id.upload_button);
     upload.setOnClickListener(onUploadPress);
-    ImageView imgView = (ImageView) findViewById(R.id.image_preview);
+    ImageView imgView = (ImageView) findViewById(R.id.picture_select);
     imgView.setOnClickListener(onSelectPress);
     drupappCloseKeyboard();
   }
@@ -367,7 +367,7 @@ public class DrupoidActivity extends Activity {
         EditText title = (EditText) findViewById(R.id.title);
         title.setText("");
         ImageView imageView = (ImageView) findViewById(R.id.image_preview);
-        imageView.setImageResource(android.R.drawable.picture_frame);
+        imageView.setImageDrawable(null);
         drupappCloseKeyboard();
       }
       // Go to login screen.

@@ -1,34 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical" >
-
-    <Button
-        android:id="@+id/upload_button"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:text="@string/upload_button" />
-
-    <EditText
-        android:id="@+id/title"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:hint="@string/title"
-        android:inputType="text">
-	</EditText>
-    <requestFocus />
     
-    <ImageView
-        android:id="@+id/image_preview"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_gravity="center"
-        android:layout_margin="10dp"
-        android:layout_weight="2.22"
-        android:contentDescription="@string/image_preview"
-        android:src="@android:drawable/ic_menu_gallery" />
+        <TableRow
+            android:id="@+id/tableRow1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="10dp"            
+            android:layout_marginLeft="10dp"            
+            android:baselineAligned="false" >
 
-</LinearLayout>
+            <EditText
+                android:id="@+id/title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/title"
+                android:inputType="text" />
+
+            <ImageButton
+                android:id="@+id/picture_select"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:contentDescription="@string/picture_select"
+                android:src="@android:drawable/ic_menu_gallery" />
+
+            <Button
+                android:id="@+id/upload_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/upload_button" />
+        </TableRow>
+
+        <ImageView
+            android:id="@+id/image_preview"
+            android:layout_width="300dp"
+            android:layout_height="match_parent"
+            android:layout_margin="10dp"
+            android:layout_weight="3"
+            android:contentDescription="@string/image_preview"/>
+
+</TableLayout>
+    
