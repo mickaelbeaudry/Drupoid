@@ -29,6 +29,6 @@
         android:layout_margin="10dp"
         android:layout_weight="2.22"
         android:contentDescription="@string/image_preview"
-        android:src="@drawable/insert_image" />
+        android:src="@android:drawable/ic_menu_gallery" />
 
 </LinearLayout>

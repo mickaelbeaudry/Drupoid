@@ -105,7 +105,7 @@ public class HttpMultipartRequest {
             String cookie = conn.getHeaderField(i);
             cookie = cookie.substring(0, cookie.indexOf(";"));
             if (cookie.substring(0, 4).equals("SESS")) {
-              Common.setPref(ctxt, "drupoidCookie", cookie);
+              Common.setPref(ctxt, "drupappCookie", cookie);
             }
           }
         }
