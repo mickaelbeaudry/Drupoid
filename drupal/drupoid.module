@@ -89,7 +89,16 @@ function drupoid_configuration($form, $form_state) {
     '#default_value' => variable_get('drupoid_debug'),
   );
 
-  return system_settings_form($form);
+  $form = system_settings_form($form);
+  $form['#submit'][] = 'drupoid_configuration_submit';
+  return $form;
+}
+
+/**
+ * Submit callback after saving the configuration form.
+ */
+function drupoid_configuration_submit($form, $form_state) {
+  variable_set('menu_rebuild_needed', TRUE);
 }
 
 /**
