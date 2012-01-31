@@ -29,6 +29,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 /**
@@ -236,8 +237,10 @@ public class DrupoidActivity extends Activity {
 
     Button upload = (Button) findViewById(R.id.upload_button);
     upload.setOnClickListener(onUploadPress);
-    ImageView imgView = (ImageView) findViewById(R.id.picture_select);
+    ImageView imgView = (ImageView) findViewById(R.id.image_preview);
     imgView.setOnClickListener(onSelectPress);
+    TextView imageSelect = (TextView) findViewById(R.id.picture_select);
+    imageSelect.setOnClickListener(onSelectPress);
     drupappCloseKeyboard();
   }
 
