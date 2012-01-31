@@ -50,7 +50,7 @@
         android:layout_marginTop="10dp"
         android:textColor="#133B54"
         android:background="#9cc8e3"
-        android:height="35dp"
+        android:height="40dp"
         android:text="@string/login" />
     
 </LinearLayout>
