@@ -18,6 +18,14 @@ function drupapp_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  // Experimental - use with care.
+  $items[variable_get('drupapp_endpoint', 'drupapp') .'/glass'] = array(
+    'title' => 'Glass post',
+    'page callback' => 'drupapp_glass',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
   $items['admin/config/media/drupapp'] = array(
     'title' => 'Drupapp',
     'description' => 'Configure the settings for Drupal application.',

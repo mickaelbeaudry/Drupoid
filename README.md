@@ -3,7 +3,7 @@ Drupapp
 -------
 
 Example Drupal module able to save a title and image coming from 
-an Android or iOS application. The source for this module and the application 
+an Android (Phone and Glass) or iOS application. The source for this module and the application
 can be found at http://github.com/swentel/Drupoid
 
 Blog post: http://realize.be/posting-images-android-drupal
@@ -28,11 +28,16 @@ Every request is logged into watchdog - good or bad.
 Android
 -------
 
-The app is written on Android 2.3.3, SDK level 10.
+The Phone app is written on Android 2.3.3, SDK level 10.
 
 After compiling, run the application and configure
 the url, username and password. The path in the url
 matches the Drupal path, eg http://example.com/mobile-post
+
+The Glass version adds a 'Share to your site' intent to every picture.
+You need to change the configuration in Config.java so we can post
+to your site. In future version, we'll add authentication, but this
+is a little hairy to add right now in non-official glassware.
 
 iOS
 ---
