@@ -61,9 +61,16 @@ function drupapp_configuration($form, $form_state) {
 
   $form['drupapp_endpoint'] = array(
     '#title' => t('Endpoint'),
-    '#description' => t('The end point URL for your request. Current endpoint is @end_point', array('@end_point' => $base_url . '/' . variable_get('drupapp_endpoint', 'drupapp'))),
+    '#description' => t('The end point URL for your request. Current endpoint is @end_point. For the Glass endpoint, the endpoint is @glass_end_point.', array('@end_point' => $base_url . '/' . variable_get('drupapp_endpoint', 'drupapp'), '@glass_end_point' => $base_url . '/' . variable_get('drupapp_endpoint', 'drupapp') . '/glass')),
     '#type' => 'textfield',
     '#default_value' => variable_get('drupapp_endpoint', 'drupapp'),
+  );
+
+  $form['drupapp_glass_secret'] = array(
+    '#title' => t('Glass secret'),
+    '#description' => t('Create a secret for your Glass connection.'),
+    '#type' => 'textfield',
+    '#default_value' => variable_get('drupapp_glass_secret', 'druglass'),
   );
 
   $options = array();
@@ -130,6 +137,48 @@ function drupapp_request() {
   $callback = 'drupapp_service_'  . $request_type;
   $result = $callback();
   drupapp_request_end($result['message'], $result['result']);
+}
+
+/**
+ * Menu callback: do a drupapp request from Glass.
+ *
+ * Currently there's no feedback to glass.
+ */
+function drupapp_glass() {
+
+  // Check the secret.
+  $secret = variable_get('drupapp_glass_secret', 'druglass');
+  $post_secret = isset($_POST['glass_secret']) ? $_POST['glass_secret'] : '';
+  if ($secret != $post_secret) {
+    return;
+  }
+
+  // Check the account.
+  $account_name = isset($_POST['account_name']) ? $_POST['account_name'] : '';
+  $account = user_load_by_name($account_name);
+  if (empty($account)) {
+    return;
+  }
+
+  // Try to save the node and file.
+  if ($file = _drupapp_save_upload('image')) {
+    // Build node.
+    list($bundle, $image_field_name) = explode('|', variable_get('drupapp_image_field'));
+    $node = new stdClass();
+    $node->title = $_POST['title'];
+    $node->type = $bundle;
+    $node->status = variable_get('drupapp_status', FALSE);
+    $node->name = $account->name;
+    $node->language = LANGUAGE_NONE;
+    $node->{$image_field_name}[LANGUAGE_NONE][0] = (array) $file;
+
+    // Save the node.
+    node_submit($node);
+    node_save($node);
+    if ($node->nid) {
+      cache_clear_all();
+    }
+  }
 }
 
 /**
