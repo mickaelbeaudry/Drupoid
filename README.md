@@ -13,13 +13,13 @@ Drupal content type
 -------------------
 
 You need to create at least one content type with an image field.
-You can of course change this to your own needs.
+You can configure this to your own needs.
 
 Drupal Installation
 -------------------
 Enable the module, give yourself the 'administer drupapp' permission
 and go to admin/config/media/drupapp where you need to configure
-some options like image field etc.
+settings like image field etc.
 
 Give roles the "upload images via app" so they can upload images.
 
@@ -34,10 +34,12 @@ the url, username and password. The path in the url
 matches the Drupal path, eg http://example.com/mobile-post
 
 The Glass version adds a new voice command and activity to take a picture
-and then share to your site. Default command is "DruGlass".
+and then allows you to share it to your site. Default command is "DruGlass".
 You need to change the configuration in Config.java so we can post
-to your site. In future version, we'll add authentication, but this
+to your site. In future versions, we'll add authentication, but this
 is a little hairy to add right now in non-official glassware.
+
+Note that the Glass java needs extreme cleanup, but the principle works :)
 
 iOS
 ---
