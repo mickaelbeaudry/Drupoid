@@ -61,7 +61,7 @@ function drupapp_configuration($form, $form_state) {
 
   $form['drupapp_endpoint'] = array(
     '#title' => t('Endpoint'),
-    '#description' => t('The end point URL for your request. Current endpoint is @end_point. For the Glass endpoint, the endpoint is @glass_end_point.', array('@end_point' => $base_url . '/' . variable_get('drupapp_endpoint', 'drupapp'), '@glass_end_point' => $base_url . '/' . variable_get('drupapp_endpoint', 'drupapp') . '/glass')),
+    '#description' => t('The end point URL for your request: @end_point.<br />The Glass endpoint is @glass_end_point.', array('@end_point' => $base_url . '/' . variable_get('drupapp_endpoint', 'drupapp'), '@glass_end_point' => $base_url . '/' . variable_get('drupapp_endpoint', 'drupapp') . '/glass')),
     '#type' => 'textfield',
     '#default_value' => variable_get('drupapp_endpoint', 'drupapp'),
   );
