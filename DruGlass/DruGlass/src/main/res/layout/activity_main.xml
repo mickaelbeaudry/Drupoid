@@ -2,7 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black">
+    android:background="@color/background">
 
     <ImageView
         android:id="@+id/photo"
@@ -13,14 +13,13 @@
     <TextView
         android:id="@+id/tap_instruction"
         android:layout_width="fill_parent"
-        android:layout_marginLeft="2dp"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:layout_gravity="bottom"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"
+        android:textColor="@color/textcolor"
+        android:textSize="@dimen/text_size"
         android:textStyle="bold"
-        android:layout_margin="20dp"
+        android:layout_margin="@dimen/instruction_margin"
         android:text="@string/tapforoptions"  />
 
 </FrameLayout>
