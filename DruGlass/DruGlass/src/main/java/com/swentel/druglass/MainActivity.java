@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Handler;
+import android.os.Environment;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.Menu;
@@ -15,8 +15,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.google.android.glass.touchpad.Gesture;
@@ -30,57 +28,26 @@ import org.apache.http.Header;
 import java.io.File;
 import java.io.FileNotFoundException;
 
+/**
+ * Main activity.
+ */
 public class MainActivity extends Activity {
 
-    // App responds to voice trigger "test the camera", takes a picture with GlassSnapshotActivity and then returns.
-
-    private static final String TAG = MainActivity.class.getSimpleName();
-    private static final int TAKE_PHOTO_CODE = 1;
-    private static final String IMAGE_FILE_NAME = "/sdcard/ImageTest.jpg";
-
-    private boolean picTaken = false; // flag to indicate if we just returned from the picture taking intent
-    private String theImageFile = ""; // this holds the name of the image that was returned by the camera
-
-    private TextView text1;
-    private TextView text2;
-
-    private ProgressBar myProgressBar;
-    protected boolean mbActive;
-
-    private String inputQueryString;
-    private String queryCategory;
-
-    final Handler myHandler = new Handler(); // handles looking for the returned image file
-    private int numberOfImageFileAttempts = 0;
-
-    private String responseBody = "";
+    private static final String IMAGE_FILE_NAME = Environment.getExternalStorageDirectory().getPath() + "/ImageTest.jpg";
+    private boolean picTaken = false;
 
     private TextToSpeech mSpeech;
-
-    private boolean readyForMenu = false;
-    private boolean gotImageMatch = false;
-
     private GestureDetector mGestureDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.v(TAG,"creating activity");
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.activity_main);
-        text1 = (TextView) findViewById(R.id.text1);
-        text2 = (TextView) findViewById(R.id.text2);
-        text1.setText("");
-        text2.setText("");
-        myProgressBar = (ProgressBar) findViewById(R.id.my_progressBar);
-        LinearLayout llResult = (LinearLayout) findViewById(R.id.resultLinearLayout);
         TextView tvResult = (TextView) findViewById(R.id.tap_instruction);
-        llResult.setVisibility(View.INVISIBLE);
         tvResult.setVisibility(View.INVISIBLE);
-        myProgressBar.setVisibility(View.INVISIBLE);
 
         // Even though the text-to-speech engine is only used in response to a menu action, we
         // initialize it when the application starts so that we avoid delays that could occur
@@ -98,7 +65,6 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
@@ -206,16 +172,10 @@ public class MainActivity extends Activity {
             intent.putExtra("snapshotWidth", 1280);
             intent.putExtra("snapshotHeight", 720);
             intent.putExtra("maximumWaitTimeForCamera", 2000);
-            startActivityForResult(intent,1);
-        }
-        else {
-            // do nothing
+            startActivityForResult(intent, 1);
         }
     }
 
-    /*
-     * Send generic motion events to the gesture detector
-     */
     @Override
     public boolean onGenericMotionEvent(MotionEvent event) {
         if (mGestureDetector != null) {
@@ -231,11 +191,7 @@ public class MainActivity extends Activity {
             @Override
             public boolean onGesture(Gesture gesture) {
                 if (gesture == Gesture.TAP) {
-                    // do something on tap
-                    Log.v(TAG,"tap");
-                    //if (readyForMenu) {
                     openOptionsMenu();
-                    //}
                     return true;
                 } else if (gesture == Gesture.TWO_TAP) {
                     // do something on two finger tap
@@ -284,7 +240,7 @@ public class MainActivity extends Activity {
                     params.put("image", myFile);
                 } catch(FileNotFoundException ignored) {}
 
-                // Get last broadcast.
+                // Send file.
                 AsyncHttpClient client = new AsyncHttpClient();
                 client.post(Config.glassEndPoint, params, new AsyncHttpResponseHandler() {
                     @Override
@@ -313,35 +269,16 @@ public class MainActivity extends Activity {
         switch(requestCode) {
             case (1) : {
                 if (resultCode == Activity.RESULT_OK) {
-                    // TODO Extract the data returned from the child Activity.
-                    Log.v(TAG,"onActivityResult");
-
                     File f = new File(IMAGE_FILE_NAME);
                     if (f.exists()) {
-                        Log.v(TAG,"image file from camera was found");
-
                         Bitmap b = BitmapFactory.decodeFile(IMAGE_FILE_NAME);
-                        Log.v(TAG,"bmp width=" + b.getWidth() + " height=" + b.getHeight());
-                        ImageView image = (ImageView) findViewById(R.id.bgPhoto);
+                        ImageView image = (ImageView) findViewById(R.id.photo);
                         image.setImageBitmap(b);
-
-                        text1 = (TextView) findViewById(R.id.text1);
-                        text2 = (TextView) findViewById(R.id.text2);
-                        text1.setText("The image shown was saved successfully to a file named:");
-                        text2.setText("\n" + IMAGE_FILE_NAME);
-
-                        LinearLayout llResult = (LinearLayout) findViewById(R.id.resultLinearLayout);
-                        llResult.setVisibility(View.VISIBLE);
-                        TextView line1 = (TextView) findViewById(R.id.titleOfWork);
-                        TextView line2 = (TextView) findViewById(R.id.Singer);
                         TextView tap = (TextView) findViewById(R.id.tap_instruction);
-                        line1.setText("");
-                        line2.setText("");
                         tap.setVisibility(View.VISIBLE);
                     }
                 }
                 else {
-                    Log.v(TAG,"onActivityResult returned bad result code");
                     finish();
                 }
                 break;
@@ -351,13 +288,11 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-
-        //Close the Text to Speech Library
-        if(mSpeech != null) {
+        // Close the Text to Speech Library.
+        if (mSpeech != null) {
             mSpeech.stop();
             mSpeech.shutdown();
             mSpeech = null;
-            Log.d(TAG, "TTS Destroyed");
         }
         super.onDestroy();
     }

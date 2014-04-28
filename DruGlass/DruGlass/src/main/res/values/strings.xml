@@ -4,6 +4,7 @@
     <!-- Global strings -->
     <string name="app_name">Drupal Glass</string>
     <string name="voice_trigger">Drupal Glass</string>
+    <string name="photo">Photo</string>
 
     <!-- Menu item strings. -->
     <string name="stop">Stop</string>

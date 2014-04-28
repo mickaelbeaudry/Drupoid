@@ -8,7 +8,6 @@ import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -19,8 +18,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-public class GlassSnapshotActivity extends Activity implements SurfaceHolder.Callback
-{
+/**
+ * SnapshotActivity.
+ */
+public class GlassSnapshotActivity extends Activity implements SurfaceHolder.Callback {
+
     // This class implements a simple camera snapshot activity for Google Glass.
     // You would typically use this class when you want to take a one-off snapshot
     // and immediately return to your calling activity.
@@ -79,9 +81,7 @@ public class GlassSnapshotActivity extends Activity implements SurfaceHolder.Cal
     private boolean cameraPreviouslyAcquired = false;
 
     @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
-        Log.v(TAG,"onCreate");
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
         //get the Image View at the main.xml file
@@ -94,14 +94,13 @@ public class GlassSnapshotActivity extends Activity implements SurfaceHolder.Cal
         // save all the values found in the extras...
         imageFileName = extras.getString("imageFileName");
         previewWidth = extras.getInt("previewWidth");
-        previewHeight = extras.getInt("previewHeight");;
+        previewHeight = extras.getInt("previewHeight");
         snapshotWidth = extras.getInt("snapshotWidth");
         snapshotHeight = extras.getInt("snapshotHeight");
         maximumWaitTimeForCamera = extras.getInt("maximumWaitTimeForCamera");
         if (imageFileName.length() == 0 || previewWidth == 0 || previewHeight == 0 ||
                 snapshotWidth == 0 || snapshotHeight == 0 || maximumWaitTimeForCamera == 0) {
-            // abandon the activity if extras are not complete
-            Log.e(TAG,"Extras specified in the call are invalid");
+            // Abandon the activity if extras are not complete.
             Intent resultIntent = new Intent();
             setResult(Activity.RESULT_CANCELED, resultIntent);
             finish();
@@ -109,16 +108,12 @@ public class GlassSnapshotActivity extends Activity implements SurfaceHolder.Cal
     }
 
     @Override
-    public void onResume()
-    {
+    public void onResume() {
         super.onResume();
-        Log.v(TAG,"onResume");
         if (gotInterrupted && cameraPreviouslyAcquired) {
-            Log.v(TAG,"returned from interrupt by KeyDown");
-            // this activity was running but was interrupted by a camera click after camera was acquired
-            // so try to get the camera again now
+            // This activity was running but was interrupted by a camera click after camera was
+            // acquired so try to get the camera again now.
             if (!getCameraAndSetPreview(sHolder)) {
-                Log.e(TAG,"Exception encountered creating surface, exiting");
                 mCamera = null;
                 Intent resultIntent = new Intent();
                 setResult(Activity.RESULT_CANCELED, resultIntent);
@@ -129,86 +124,64 @@ public class GlassSnapshotActivity extends Activity implements SurfaceHolder.Cal
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // if the user presses the camera key while this activity is happening then release the
-        // camera and return false, to allow the OS to handle it
+        // If the user presses the camera key while this activity is happening then release the
+        // camera and return false, to allow the OS to handle it.
         if (keyCode == KeyEvent.KEYCODE_CAMERA) {
-            Log.v(TAG,"onKeyDown");
             if (mCamera != null) {
-                mCamera.stopPreview();
-                //release the camera
-                mCamera.release();
-                //unbind the camera from this object
-                mCamera = null;
+                destroyCamera();
             }
             gotInterrupted = true;
             return false;
-        } else {
+        }
+        else {
             return super.onKeyDown(keyCode, event);
         }
     }
 
-    public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3)
-    {
-        Log.v(TAG,"surfaceChanged");
-        //get camera parameters
+    @Override
+    public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
+        // Get camera parameters.
         try {
             parameters = mCamera.getParameters();
-            Log.v(TAG,"got parms");
 
-            //set camera parameters
+            // Set camera parameters.
             parameters.setPreviewSize(previewWidth,previewHeight);
             parameters.setPictureSize(snapshotWidth,snapshotHeight);
             parameters.setPreviewFpsRange(30000, 30000);
-            Log.v(TAG,"parms were set");
             mCamera.setParameters(parameters);
 
             mCamera.startPreview();
-            Log.v(TAG,"preview started");
 
-            //sets what code should be executed after the picture is taken
-            Camera.PictureCallback mCall = new Camera.PictureCallback()
-            {
-                public void onPictureTaken(byte[] data, Camera camera)
-                {
-                    Log.v(TAG,"pictureTaken");
-                    Log.v(TAG,"data bytes=" + data.length);
+            // Sets what code should be executed after the picture is taken.
+            Camera.PictureCallback mCall = new Camera.PictureCallback() {
+
+                public void onPictureTaken(byte[] data, Camera camera) {
                     //decode the data obtained by the camera into a Bitmap
                     Bitmap bmp = decodeSampledBitmapFromData(data,640,360);
-                    Log.v(TAG,"bmp width=" + bmp.getWidth() + " height=" + bmp.getHeight());
-                    FileOutputStream outStream = null;
-                    try{
+                    try {
                         FileOutputStream fos = new FileOutputStream(imageFileName);
                         final BufferedOutputStream bos = new BufferedOutputStream(fos, BUFFER_SIZE);
                         bmp.compress(CompressFormat.JPEG, 100, bos);
                         bos.flush();
                         bos.close();
                         fos.close();
-                    } catch (FileNotFoundException e){
-                        Log.v(TAG, e.getMessage());
-                    } catch (IOException e){
-                        Log.v(TAG, e.getMessage());
                     }
+                    catch (FileNotFoundException ignored) {}
+                    catch (IOException  ignored) {}
+
                     Intent resultIntent = new Intent();
-                    // TODO Add extras or a data URI to this intent as appropriate.
-                    resultIntent.putExtra("testString","here is my test");
                     setResult(Activity.RESULT_OK, resultIntent);
                     finish();
                 }
             };
-            Log.v(TAG,"set callback");
+
             mCamera.takePicture(null, null, mCall);
         }
         catch (Exception e) {
             try {
                 mCamera.release();
-                Log.e(TAG,"released the camera");
             }
-            catch (Exception ee) {
-                // do nothing
-                Log.e(TAG,"error releasing camera");
-                Log.e(TAG,"Exception encountered releasing camera, exiting:" + ee.getLocalizedMessage());
-            }
-            Log.e(TAG,"Exception encountered, exiting:" + e.getLocalizedMessage());
+            catch (Exception ignored) {}
             mCamera = null;
             Intent resultIntent = new Intent();
             setResult(Activity.RESULT_CANCELED, resultIntent);
@@ -223,20 +196,16 @@ public class GlassSnapshotActivity extends Activity implements SurfaceHolder.Cal
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         BitmapFactory.decodeByteArray(data, 0, data.length,options);
-        options.inSampleSize = 2; // saved image will be one half the width and height of the original (image captured is double the resolution of the screen size)
+        options.inSampleSize = 2;  // saved image will be one half the width and height of the original (image captured is double the resolution of the screen size)
         // Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
         return BitmapFactory.decodeByteArray(data, 0, data.length,options);
     }
 
-
-    public void surfaceCreated(SurfaceHolder holder)
-    {
-        Log.v(TAG,"surfaceCreated");
-        // The Surface has been created, acquire the camera and tell it where
-        // to draw the preview.
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+        // The Surface has been created, acquire the camera and tell it where to draw the preview.
         if (!getCameraAndSetPreview(holder)) {
-            Log.e(TAG,"Exception encountered creating surface, exiting");
             mCamera = null;
             Intent resultIntent = new Intent();
             setResult(Activity.RESULT_CANCELED, resultIntent);
@@ -244,89 +213,81 @@ public class GlassSnapshotActivity extends Activity implements SurfaceHolder.Cal
         }
     }
 
-    public void surfaceDestroyed(SurfaceHolder holder)
-    {
-        Log.v(TAG,"surfaceDestroyed");
-        if (mCamera != null) {
-            mCamera.stopPreview();
-            //release the camera
-            mCamera.release();
-            //unbind the camera from this object
-            mCamera = null;
-        }
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        destroyCamera();
     }
 
     @Override
-    public void onPause()
-    {
-        Log.v(TAG,"onPause");
+    public void onPause() {
         super.onPause();
-        if (mCamera != null) {
-            mCamera.stopPreview();
-            //release the camera
-            mCamera.release();
-            //unbind the camera from this object
-            mCamera = null;
-        }
+        destroyCamera();
     }
 
     @Override
-    public void onDestroy()
-    {
-        Log.v(TAG,"onDestroy");
+    public void onDestroy() {
         super.onDestroy();
+        destroyCamera();
+    }
 
+    /**
+     * Destroy the camera.
+     */
+    public void destroyCamera() {
         if (mCamera != null) {
             mCamera.stopPreview();
-            //release the camera
             mCamera.release();
-            //unbind the camera from this object
             mCamera = null;
         }
     }
 
+    /**
+     * Get camera and setup Preview.
+     *
+     * @param holder
+     *   The surface holder.
+     *
+     * @return TRUE|FALSE
+     */
     private boolean getCameraAndSetPreview(SurfaceHolder holder) {
-        // get the camera and set the preview surface
-        if (getTheCamera(holder)) {
+        if (getTheCamera()) {
             try {
                 mCamera.setPreviewDisplay(holder);
-                Log.v(TAG,"surface holder for preview was set");
                 cameraPreviouslyAcquired = true;
-                return true; // the camera was acquired and the preview surface set
+                return true;
             }
-            catch (Exception e) {
-                Log.e(TAG,"Exception encountered setting camera preview display:" + e.getLocalizedMessage());
-            }
+            catch (Exception ignored) {}
         }
         else {
-            Log.e(TAG,"Exception encountered getting camera, exiting");
             mCamera = null;
         }
         return false;
     }
 
-    private boolean getTheCamera(SurfaceHolder holder) {
-        Log.v(TAG,"getTheCamera");
-        // keep trying to acquire the camera until "maximumWaitTimeForCamera" seconds have passed
-        boolean acquiredCam = false;
+    /**
+     * Get the camera.
+     *
+     * @return TRUE|FALSE
+     */
+    private boolean getTheCamera() {
+
+        // Keep trying to acquire the camera until "maximumWaitTimeForCamera" seconds have passed.
         int timePassed = 0;
-        while (!acquiredCam && timePassed < maximumWaitTimeForCamera) {
+
+        while (timePassed < maximumWaitTimeForCamera) {
             try {
                 mCamera = Camera.open();
-                Log.v(TAG,"acquired the camera");
-                acquiredCam = true;
                 return true;
             }
-            catch (Exception e) {
-                Log.e(TAG,"Exception encountered opening camera:" + e.getLocalizedMessage());
-            }
+            catch (Exception ignored) {}
+
             try {
                 Thread.sleep(200);
-            } catch (InterruptedException ee) {
-                Log.e(TAG,"Exception encountered sleeping:" + ee.getLocalizedMessage());
-            }
+            } catch (InterruptedException ignored) {}
+
             timePassed += 200;
         }
+
         return false;
     }
 }
