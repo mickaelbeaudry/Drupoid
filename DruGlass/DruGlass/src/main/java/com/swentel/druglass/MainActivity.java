@@ -8,7 +8,6 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
 import android.speech.tts.TextToSpeech;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -51,7 +50,7 @@ public class MainActivity extends Activity {
 
         // Even though the text-to-speech engine is only used in response to a menu action, we
         // initialize it when the application starts so that we avoid delays that could occur
-        // if we waited until it was needed to start it up
+        // if we waited until it was needed to start it up.
         mSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
@@ -59,8 +58,8 @@ public class MainActivity extends Activity {
             }
         });
 
+        // Create the gesture detector.
         mGestureDetector = createGestureDetector(this);
-
     }
 
     @Override
@@ -176,49 +175,32 @@ public class MainActivity extends Activity {
         }
     }
 
-    @Override
+   @Override
     public boolean onGenericMotionEvent(MotionEvent event) {
-        if (mGestureDetector != null) {
-            return mGestureDetector.onMotionEvent(event);
-        }
-        return false;
+       return mGestureDetector != null && mGestureDetector.onMotionEvent(event);
     }
 
+    /**
+     * Gesture detector.
+     *
+     * @param context
+     *   The current context.
+     *
+     * @return FALSE|gestureDetector
+     */
     private GestureDetector createGestureDetector(Context context) {
         GestureDetector gestureDetector = new GestureDetector(context);
-        //Create a base listener for generic gestures
         gestureDetector.setBaseListener( new GestureDetector.BaseListener() {
             @Override
             public boolean onGesture(Gesture gesture) {
                 if (gesture == Gesture.TAP) {
                     openOptionsMenu();
                     return true;
-                } else if (gesture == Gesture.TWO_TAP) {
-                    // do something on two finger tap
-                    return true;
-                } else if (gesture == Gesture.SWIPE_RIGHT) {
-                    // do something on right (forward) swipe
-                    return true;
-                } else if (gesture == Gesture.SWIPE_LEFT) {
-                    // do something on left (backwards) swipe
-                    return true;
                 }
                 return false;
             }
         });
-        gestureDetector.setFingerListener(new GestureDetector.FingerListener() {
-            @Override
-            public void onFingerCountChanged(int previousCount, int currentCount) {
-                // do something on finger count changes
-            }
-        });
-        gestureDetector.setScrollListener(new GestureDetector.ScrollListener() {
-            @Override
-            public boolean onScroll(float displacement, float delta, float velocity) {
-                // do something on scrolling
-                return false;
-            }
-        });
+
         return gestureDetector;
     }
 
@@ -246,12 +228,11 @@ public class MainActivity extends Activity {
                     @Override
                     public void onSuccess(String response) {
                         // TODO
-                        Log.v("DEBUG", "Succesfull call");
                     }
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                        Log.d("DEBUG", error.getMessage());
+                        // TODO
                     }
 
                 });
