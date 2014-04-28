@@ -34,7 +34,7 @@ the url, username and password. The path in the url
 matches the Drupal path, eg http://example.com/mobile-post
 
 The Glass version adds a new voice command and activity to take a picture
-and then allows you to share it to your site. Default command is "drupalglass".
+and then allows you to share it to your site. Default command is "Drupal Glass".
 You need to change the configuration in Config.java so we can post
 to your site. In future versions, we'll add authentication, but this
 is a little hairy to add right now in non-official glassware.
