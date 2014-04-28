@@ -39,7 +39,7 @@ You need to change the configuration in Config.java so we can post
 to your site. In future versions, we'll add authentication, but this
 is a little hairy to add right now in non-official glassware.
 
-Note that the Glass java needs extreme cleanup, but the principle works :)
+Note that we currently always override the picture take, so there's no history on the Glass.
 
 iOS
 ---
