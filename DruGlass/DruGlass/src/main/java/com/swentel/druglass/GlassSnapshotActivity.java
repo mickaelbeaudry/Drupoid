@@ -194,11 +194,11 @@ public class GlassSnapshotActivity extends Activity implements SurfaceHolder.Cal
 
         // First decode with inJustDecodeBounds=true to check dimensions
         final BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
+        //options.inJustDecodeBounds = true;
         BitmapFactory.decodeByteArray(data, 0, data.length,options);
-        options.inSampleSize = 2;  // saved image will be one half the width and height of the original (image captured is double the resolution of the screen size)
+        //options.inSampleSize = 2;  // saved image will be one half the width and height of the original (image captured is double the resolution of the screen size)
         // Decode bitmap with inSampleSize set
-        options.inJustDecodeBounds = false;
+        //options.inJustDecodeBounds = false;
         return BitmapFactory.decodeByteArray(data, 0, data.length,options);
     }
 

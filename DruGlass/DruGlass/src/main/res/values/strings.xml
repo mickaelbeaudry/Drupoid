@@ -2,13 +2,17 @@
 <resources>
 
     <!-- Global strings -->
-    <string name="app_name">Drupal Glass</string>
-    <string name="voice_trigger">Drupal Glass</string>
+    <string name="app_name">Lab photo</string>
+    <string name="voice_trigger">Lab photo</string>
     <string name="photo">Photo</string>
+    <string name="sending">Sending photo</string>
+    <string name="send">Photo send</string>
+    <string name="failed">Failed sending photo</string>
 
     <!-- Menu item strings. -->
     <string name="stop">Stop</string>
     <string name="share">Send to site</string>
     <string name="tapforoptions">Tap for options</string>
+
 
 </resources>

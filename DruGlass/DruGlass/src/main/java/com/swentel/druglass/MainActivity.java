@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -38,6 +39,8 @@ public class MainActivity extends Activity {
     private TextToSpeech mSpeech;
     private GestureDetector mGestureDetector;
 
+    private TextView tvResult;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,7 +48,7 @@ public class MainActivity extends Activity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.activity_main);
-        TextView tvResult = (TextView) findViewById(R.id.tap_instruction);
+        tvResult = (TextView) findViewById(R.id.tap_instruction);
         tvResult.setVisibility(View.INVISIBLE);
 
         // Even though the text-to-speech engine is only used in response to a menu action, we
@@ -166,10 +169,10 @@ public class MainActivity extends Activity {
         if (!picTaken) {
             Intent intent = new Intent(this, GlassSnapshotActivity.class);
             intent.putExtra("imageFileName",IMAGE_FILE_NAME);
-            intent.putExtra("previewWidth", 640);
-            intent.putExtra("previewHeight", 360);
+            intent.putExtra("previewWidth", 800);
+            intent.putExtra("previewHeight", 480);
             intent.putExtra("snapshotWidth", 1280);
-            intent.putExtra("snapshotHeight", 720);
+            intent.putExtra("snapshotHeight", 960);
             intent.putExtra("maximumWaitTimeForCamera", 2000);
             startActivityForResult(intent, 1);
         }
@@ -212,6 +215,8 @@ public class MainActivity extends Activity {
                 return true;
             case R.id.share:
 
+                tvResult.setText(getString(R.string.sending));
+
                 // Setup params.
                 RequestParams params = new RequestParams();
                 params.put("title", Config.imageTitle);
@@ -227,12 +232,14 @@ public class MainActivity extends Activity {
                 client.post(Config.glassEndPoint, params, new AsyncHttpResponseHandler() {
                     @Override
                     public void onSuccess(String response) {
-                        // TODO
+                        tvResult.setText(getString(R.string.send));
+                        printOptionsText();
                     }
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                        // TODO
+                        tvResult.setText(getString(R.string.failed));
+                        printOptionsText();
                     }
 
                 });
@@ -241,6 +248,20 @@ public class MainActivity extends Activity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    /**
+     * Print options text.
+     */
+    private void printOptionsText() {
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                tvResult.setText(getString(R.string.tapforoptions));
+            }
+
+        }, 3000);
     }
 
     @Override
