@@ -1,36 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="match_parent"
-	android:layout_height="match_parent"
-	android:orientation="vertical" >
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
 
-	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:orientation="vertical"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_margin="10dp"
-		android:background="#ffffff" >
-    
-	    <ImageView
-	        android:id="@+id/image_preview"
-	        android:layout_width="290dp"
-	        android:layout_height="280dp"
-	        android:layout_margin="5dp"
-	        android:background="#000"
-	        android:contentDescription="@string/image_preview"
-	        android:scaleType="center"
-	        android:src="@android:drawable/ic_menu_gallery" />
+        android:background="#ffffff"
+        android:orientation="vertical" >
 
-	    <TextView
-	        android:id="@+id/picture_select"
-	        android:layout_width="match_parent"
-	        android:layout_height="wrap_content"
-	        android:layout_marginBottom="10dp"
-	        android:gravity="center_horizontal"
-	        android:layout_marginTop="5dp"
-	        android:text="@string/picture_select" />
-	    
-	</LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="0dp"
+            android:orientation="horizontal" >
+
+            <ImageView
+                android:id="@+id/image_preview"
+                android:layout_width="134dp"
+                android:layout_height="128dp"
+                android:layout_margin="5dp"
+                android:background="#000"
+                android:contentDescription="@string/image_preview"
+                android:scaleType="center"
+                android:src="@android:drawable/ic_menu_gallery" />
+
+            <Button
+                android:id="@+id/button1"
+                android:layout_width="0dip"
+                android:layout_margin="5dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.68"
+                android:text="Rotate"
+                android:onClick="rotateImageViewOnly" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/picture_select"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="5dp"
+            android:gravity="center_horizontal"
+            android:text="@string/picture_select" />
+    </LinearLayout>
 
     <EditText
         android:id="@+id/title"
@@ -41,16 +56,16 @@
         android:layout_marginRight="10dp"
         android:hint="@string/title"
         android:inputType="text" />
-	
-  	<Button
-  	    android:id="@+id/upload_button"
-  	    android:layout_width="match_parent"
-  	    android:layout_height="wrap_content"
-  	    android:layout_marginLeft="10dp"
-  	    android:layout_marginRight="10dp"
-  	    android:background="#9cc8e3"
-  	    android:height="40dp"
-  	    android:text="@string/upload_button"
-  	    android:textColor="#133B54" />
 
-</LinearLayout>    
+    <Button
+        android:id="@+id/upload_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:background="#9cc8e3"
+        android:height="40dp"
+        android:text="@string/upload_button"
+        android:textColor="#133B54" />
+
+</LinearLayout>

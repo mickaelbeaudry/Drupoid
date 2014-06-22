@@ -5,11 +5,20 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
 import android.content.Context;
+
 
 public class HttpMultipartRequest {
 
@@ -17,6 +26,50 @@ public class HttpMultipartRequest {
   static String twoHyphens = "--";
   static String boundary = "AaB03x87yxdkjnxvi7";
 
+  // always verify the host - dont check for certificate
+  final static HostnameVerifier DO_NOT_VERIFY = new HostnameVerifier() {
+        public boolean verify(String hostname, SSLSession session) {
+            return true;
+        }
+ };
+ /**
+  * Trust every server - dont check for any certificate
+  */
+ private static void trustAllHosts() {
+           // Create a trust manager that does not validate certificate chains
+           TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+                   public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                           return new java.security.cert.X509Certificate[] {};
+                   }
+
+				@Override
+				public void checkClientTrusted(X509Certificate[] arg0,
+						String arg1) throws CertificateException {
+					// TODO Auto-generated method stub
+					
+				}
+
+				@Override
+				public void checkServerTrusted(X509Certificate[] arg0,
+						String arg1) throws CertificateException {
+					// TODO Auto-generated method stub
+					
+				}
+
+
+
+           } };
+
+           // Install the all-trusting trust manager
+           try {
+                   SSLContext sc = SSLContext.getInstance("TLS");
+                   sc.init(null, trustAllCerts, new java.security.SecureRandom());
+                   HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+           } catch (Exception e) {
+                   e.printStackTrace();
+           }
+   }
+  
   /**
    * @param ctxt
    *        The context.
@@ -32,7 +85,7 @@ public class HttpMultipartRequest {
    *        The key to send in the request.
    */
   public static String execute(Context ctxt, String urlString, HashMap<String, String> parameters, int cookieAction, String filePath, String fileParameterName) throws IOException {
-    HttpURLConnection conn = null;
+	HttpsURLConnection conn = null;
     DataOutputStream dos = null;
     DataInputStream dis = null;
     FileInputStream fileInputStream = null;
@@ -40,12 +93,17 @@ public class HttpMultipartRequest {
     File file = null;
     String sResponse = "";
 
+    
+    
+    
     byte[] buffer;
     int maxBufferSize = 20 * 1024;
     try {
 
+    	trustAllHosts();
       // Open a HTTP connection to the URL
-      conn = (HttpURLConnection) url.openConnection();
+      conn = (HttpsURLConnection) url.openConnection();
+      conn.setHostnameVerifier(DO_NOT_VERIFY);
 
       // Send cookie ?
       if (cookieAction == Common.SEND_COOKIE) {
@@ -68,6 +126,7 @@ public class HttpMultipartRequest {
 
       // See if we need to upload a file.
       if (filePath.length() > 0) {
+
         file = new File(filePath);
         fileInputStream = new FileInputStream(file);
         dos.writeBytes(twoHyphens + boundary + lineEnd);
@@ -140,4 +199,5 @@ public class HttpMultipartRequest {
 
     return sResponse;
   }
+
 }

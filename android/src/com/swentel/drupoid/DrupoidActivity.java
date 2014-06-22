@@ -17,11 +17,14 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.Html;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,6 +32,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,6 +52,8 @@ public class DrupoidActivity extends Activity {
   String drupappUser = "";
   String drupappPass = "";
   String drupappEndpoint = "";
+  
+  int currentRotation = 0;
 
   /**
    * Main onCreate.
@@ -147,7 +153,7 @@ public class DrupoidActivity extends Activity {
 
       EditText title = (EditText) findViewById(R.id.title);
       if (title.getText().toString().length() > 0 && selectedImagePath.toString().length() > 0) {
-        image_title = title.getText().toString();
+        image_title = EntityDecoder.convert(title.getText().toString(), EntityDecoder.chars, EntityDecoder.charsHtml);
         dialog = ProgressDialog.show(DrupoidActivity.this, getString(R.string.uploading), getString(R.string.please_wait), true);
         new drupappUploadTask().execute();
       }
@@ -305,7 +311,18 @@ public class DrupoidActivity extends Activity {
     ImageView imageView = (ImageView) findViewById(R.id.image_preview);
     imageView.setImageBitmap(bitmap);
   }
-
+  
+  
+  public void rotateImageViewOnly(View view) {
+	  Matrix matrix=new Matrix();
+	  ImageView imageView = (ImageView) findViewById(R.id.image_preview);
+	  imageView.setScaleType(ScaleType.MATRIX);   //required
+	  this.currentRotation = (this.currentRotation + 90) % 360;
+	  matrix.postRotate((float) this.currentRotation, 150, 150);
+	  imageView.setImageMatrix(matrix);
+	    
+  }
+  
   /**
    * Calculate size of preview.
    */
@@ -339,12 +356,14 @@ public class DrupoidActivity extends Activity {
       HashMap<String, String> Params = new HashMap<String, String>();
       Params.put("title", image_title);
       Params.put("request_type", "image_upload");
+      Params.put("rotatedegree", String.valueOf(currentRotation));
 
       // Perform request.
       try {
         sResponse = HttpMultipartRequest.execute(getBaseContext(), drupappEndpoint, Params, Common.SEND_COOKIE, selectedImagePath, "image");
       }
       catch (IOException e) {
+    	  e.printStackTrace();
       }
 
       return sResponse;
@@ -402,6 +421,7 @@ public class DrupoidActivity extends Activity {
         sResponse = HttpMultipartRequest.execute(getBaseContext(), drupappEndpoint, Params, Common.SAVE_COOKIE, "", "");
       }
       catch (IOException e) {
+    	  e.printStackTrace();
       }
 
       return sResponse;
